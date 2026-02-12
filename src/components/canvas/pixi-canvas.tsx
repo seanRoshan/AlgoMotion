@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CanvasA11yLayer } from '@/components/a11y/canvas-a11y-layer';
 import { useCanvasKeyboard } from '@/hooks/use-canvas-keyboard';
@@ -9,6 +10,11 @@ import { useSceneStore } from '@/lib/stores/scene-store';
 import { useUIStore } from '@/lib/stores/ui-store';
 import type { ElementType } from '@/types/elements';
 import { CanvasRuler } from './canvas-ruler';
+
+const THEME_COLORS = {
+	dark: { background: 0x1a1a2e, grid: 0x3a3a4a },
+	light: { background: 0xf8f9fa, grid: 0xc0c4cc },
+} as const;
 
 /**
  * React wrapper for the imperative Pixi.js canvas.
@@ -28,6 +34,7 @@ export function PixiCanvas() {
 	const managerRef = useRef<SceneManager | null>(null);
 	const [cursorX, setCursorX] = useState<number | null>(null);
 	const [cursorY, setCursorY] = useState<number | null>(null);
+	const { resolvedTheme } = useTheme();
 
 	const addElement = useSceneStore((s) => s.addElement);
 
@@ -208,11 +215,20 @@ export function PixiCanvas() {
 		};
 	}, []);
 
+	// Sync theme → SceneManager background and grid colors
+	useEffect(() => {
+		const manager = managerRef.current;
+		if (!manager?.initialized || !resolvedTheme) return;
+		const colors = resolvedTheme === 'light' ? THEME_COLORS.light : THEME_COLORS.dark;
+		manager.setBackgroundColor(colors.background);
+		manager.setGridColor(colors.grid);
+	}, [resolvedTheme]);
+
 	return (
 		<div ref={wrapperRef} className="relative h-full w-full overflow-hidden">
 			{/* Corner dead zone where rulers meet */}
 			<div
-				className="absolute top-0 left-0 z-20 bg-[#1e1e2e]"
+				className="absolute top-0 left-0 z-20 bg-background"
 				style={{ width: RULER_SIZE, height: RULER_SIZE }}
 			/>
 			{/* Horizontal ruler */}

@@ -216,6 +216,23 @@ export class SceneManager {
 	}
 
 	/**
+	 * Set the canvas background color at runtime (e.g., on theme change).
+	 */
+	setBackgroundColor(color: number): void {
+		if (this.app) {
+			this.app.renderer.background.color = color;
+		}
+	}
+
+	/**
+	 * Set the grid/dot color at runtime (e.g., on theme change).
+	 */
+	setGridColor(color: number): void {
+		this._gridColor = color;
+		this.renderGrid();
+	}
+
+	/**
 	 * Set grid size in logical units.
 	 */
 	setGridSize(size: number): void {
