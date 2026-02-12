@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+	title: 'AlgoMotion Embed',
+	description: 'Embedded algorithm animation player.',
+};
+
 export default function EmbedPage() {
 	return (
 		<div className="flex h-screen items-center justify-center">

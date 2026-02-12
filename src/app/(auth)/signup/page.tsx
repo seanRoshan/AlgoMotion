@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+	title: 'Sign Up — AlgoMotion',
+	description: 'Create your AlgoMotion account.',
+};
+
 export default function SignupPage() {
 	return (
 		<div className="space-y-4 text-center">
