@@ -105,13 +105,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: npx playwright install --with-deps chromium
 
       - name: Build application
         run: pnpm next build
+        env:
+          E2E_TESTING: 'true'
 
       - name: Run Playwright tests
         run: pnpm playwright test
+        env:
+          E2E_TESTING: 'true'
 
       - name: Upload Playwright report
         if: always()

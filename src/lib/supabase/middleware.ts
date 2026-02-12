@@ -23,6 +23,11 @@ function isAuthRoute(pathname: string): boolean {
 }
 
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
+	// Skip auth checks during E2E testing (no Supabase session available)
+	if (process.env.E2E_TESTING === 'true') {
+		return NextResponse.next({ request });
+	}
+
 	let supabaseResponse = NextResponse.next({ request });
 
 	const supabase = createServerClient(

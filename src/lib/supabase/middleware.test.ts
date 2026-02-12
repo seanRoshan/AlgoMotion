@@ -48,4 +48,22 @@ describe('updateSession', () => {
 
 		expect(response.status).toBe(200);
 	});
+
+	it('bypasses auth when E2E_TESTING is set', async () => {
+		const original = process.env.E2E_TESTING;
+		process.env.E2E_TESTING = 'true';
+
+		try {
+			const { NextRequest } = await import('next/server');
+			const { updateSession } = await import('./middleware');
+
+			const request = new NextRequest(new URL('http://localhost:3000/editor/abc'));
+			const response = await updateSession(request);
+
+			// Should pass through without redirect
+			expect(response.status).toBe(200);
+		} finally {
+			process.env.E2E_TESTING = original;
+		}
+	});
 });
