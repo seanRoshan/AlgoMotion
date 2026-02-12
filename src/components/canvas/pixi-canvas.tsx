@@ -26,6 +26,9 @@ export function PixiCanvas() {
 		const manager = new SceneManager();
 		managerRef.current = manager;
 
+		// Re-entry guard prevents infinite loops in bidirectional camera sync
+		let isSyncingCamera = false;
+
 		manager
 			.init({
 				container,
@@ -34,9 +37,12 @@ export function PixiCanvas() {
 				gridSize: 20,
 			})
 			.then(() => {
-				// Sync camera changes back to Zustand
+				// SceneManager → Zustand: sync camera on pan/zoom
 				manager.setCameraChangeHandler((camera) => {
+					if (isSyncingCamera) return;
+					isSyncingCamera = true;
 					useSceneStore.getState().setCamera(camera);
+					isSyncingCamera = false;
 				});
 
 				// Apply initial store state
@@ -47,7 +53,7 @@ export function PixiCanvas() {
 				manager.setGridVisible(gridVisible);
 			});
 
-		// Subscribe to store changes — compare previous state to detect changes
+		// Subscribe to grid visibility changes
 		let prevGridVisible = useUIStore.getState().gridVisible;
 		const unsubUI = useUIStore.subscribe((state) => {
 			if (state.gridVisible !== prevGridVisible) {
@@ -56,11 +62,20 @@ export function PixiCanvas() {
 			}
 		});
 
+		// Zustand → SceneManager: sync camera from programmatic changes
 		let prevCamera = useSceneStore.getState().camera;
 		const unsubCamera = useSceneStore.subscribe((state) => {
-			if (state.camera !== prevCamera) {
-				prevCamera = state.camera;
-				managerRef.current?.setCamera(state.camera);
+			if (isSyncingCamera) return;
+			const { camera } = state;
+			if (
+				camera.x !== prevCamera.x ||
+				camera.y !== prevCamera.y ||
+				camera.zoom !== prevCamera.zoom
+			) {
+				prevCamera = { ...camera };
+				isSyncingCamera = true;
+				managerRef.current?.setCamera(camera);
+				isSyncingCamera = false;
 			}
 		});
 
