@@ -32,6 +32,10 @@ import {
 } from '@/components/ui/menubar';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { canRedo, canUndo, useHistoryStore } from '@/lib/stores/history-store';
+import { useSceneStore } from '@/lib/stores/scene-store';
+import { useTimelineStore } from '@/lib/stores/timeline-store';
+import type { PlaybackSpeed } from '@/types';
 import { ToolSelector } from './tool-selector';
 
 function ToolbarButton({
@@ -39,16 +43,25 @@ function ToolbarButton({
 	label,
 	shortcut,
 	disabled,
+	onClick,
 }: {
 	icon: React.ComponentType<{ className?: string }>;
 	label: string;
 	shortcut?: string;
 	disabled?: boolean;
+	onClick?: () => void;
 }) {
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<Button variant="ghost" size="icon" className="h-8 w-8" disabled={disabled}>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="h-8 w-8"
+					disabled={disabled}
+					aria-label={label}
+					onClick={onClick}
+				>
 					<Icon className="h-4 w-4" />
 				</Button>
 			</TooltipTrigger>
@@ -62,7 +75,24 @@ function ToolbarButton({
 	);
 }
 
+const SPEED_OPTIONS: PlaybackSpeed[] = [0.25, 0.5, 1, 1.5, 2, 4];
+
 export function Toolbar() {
+	const undoDisabled = useHistoryStore((s) => !canUndo(s));
+	const redoDisabled = useHistoryStore((s) => !canRedo(s));
+	const undo = useHistoryStore((s) => s.undo);
+	const redo = useHistoryStore((s) => s.redo);
+
+	const zoom = useSceneStore((s) => s.camera.zoom);
+
+	const speed = useTimelineStore((s) => s.playback.speed);
+	const play = useTimelineStore((s) => s.play);
+	const pause = useTimelineStore((s) => s.pause);
+	const stop = useTimelineStore((s) => s.stop);
+	const setSpeed = useTimelineStore((s) => s.setSpeed);
+
+	const zoomPercent = `${Math.round(zoom * 100)}%`;
+
 	return (
 		<div className="flex h-11 items-center border-b px-2" role="toolbar" aria-label="Main toolbar">
 			<div className="flex items-center gap-1">
@@ -140,13 +170,27 @@ export function Toolbar() {
 			</div>
 
 			<div className="flex items-center gap-1">
-				<ToolbarButton icon={Undo2} label="Undo" shortcut="Ctrl+Z" disabled />
-				<ToolbarButton icon={Redo2} label="Redo" shortcut="Ctrl+Shift+Z" disabled />
+				<ToolbarButton
+					icon={Undo2}
+					label="Undo"
+					shortcut="Ctrl+Z"
+					disabled={undoDisabled}
+					onClick={undo}
+				/>
+				<ToolbarButton
+					icon={Redo2}
+					label="Redo"
+					shortcut="Ctrl+Shift+Z"
+					disabled={redoDisabled}
+					onClick={redo}
+				/>
 
 				<Separator orientation="vertical" className="mx-1 h-5" />
 
 				<ToolbarButton icon={Minus} label="Zoom out" shortcut="Ctrl+-" />
-				<span className="min-w-[3rem] text-center text-xs text-muted-foreground">100%</span>
+				<span className="min-w-[3rem] text-center text-xs text-muted-foreground">
+					{zoomPercent}
+				</span>
 				<ToolbarButton icon={Plus} label="Zoom in" shortcut="Ctrl+=" />
 				<ToolbarButton icon={Maximize} label="Fit to screen" shortcut="Ctrl+0" />
 
@@ -154,25 +198,25 @@ export function Toolbar() {
 
 				<div className="flex items-center gap-0.5 rounded-md bg-secondary/50 px-1">
 					<ToolbarButton icon={SkipBack} label="Step back" />
-					<ToolbarButton icon={Play} label="Play" shortcut="Space" />
-					<ToolbarButton icon={Pause} label="Pause" />
-					<ToolbarButton icon={Square} label="Stop" />
+					<ToolbarButton icon={Play} label="Play" shortcut="Space" onClick={play} />
+					<ToolbarButton icon={Pause} label="Pause" onClick={pause} />
+					<ToolbarButton icon={Square} label="Stop" onClick={stop} />
 					<ToolbarButton icon={SkipForward} label="Step forward" />
 				</div>
 
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs">
-							1x
+							{speed}x
 							<ChevronDown className="h-3 w-3" />
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
-						<DropdownMenuItem>0.25x</DropdownMenuItem>
-						<DropdownMenuItem>0.5x</DropdownMenuItem>
-						<DropdownMenuItem>1x</DropdownMenuItem>
-						<DropdownMenuItem>2x</DropdownMenuItem>
-						<DropdownMenuItem>4x</DropdownMenuItem>
+						{SPEED_OPTIONS.map((s) => (
+							<DropdownMenuItem key={s} onSelect={() => setSpeed(s)}>
+								{s}x
+							</DropdownMenuItem>
+						))}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
