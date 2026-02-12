@@ -3,6 +3,7 @@ import { ArrayRenderer } from './array-renderer';
 import { GraphRenderer } from './graph-renderer';
 import { LinkedListRenderer } from './linked-list-renderer';
 import { calculateArrowheadPoints, hexToPixiColor } from './shared';
+import { StackRenderer } from './stack-renderer';
 import { TreeRenderer } from './tree-renderer';
 
 /**
@@ -76,6 +77,7 @@ export class ElementRenderer {
 	private treeRenderer: TreeRenderer;
 	private graphRenderer: GraphRenderer;
 	private linkedListRenderer: LinkedListRenderer;
+	private stackRenderer: StackRenderer;
 
 	constructor(pixi: PixiModule) {
 		this.pixi = pixi;
@@ -83,6 +85,7 @@ export class ElementRenderer {
 		this.treeRenderer = new TreeRenderer(pixi as never);
 		this.graphRenderer = new GraphRenderer(pixi as never);
 		this.linkedListRenderer = new LinkedListRenderer(pixi as never);
+		this.stackRenderer = new StackRenderer(pixi as never);
 	}
 
 	/**
@@ -125,6 +128,13 @@ export class ElementRenderer {
 	 */
 	getLinkedListNodeContainers(elementId: string): Map<string, unknown> | undefined {
 		return this.linkedListRenderer.getNodeContainers(elementId);
+	}
+
+	/**
+	 * Get stack frame containers for animation targeting.
+	 */
+	getStackFrameContainers(elementId: string): unknown[] | undefined {
+		return this.stackRenderer.getFrameContainers(elementId);
 	}
 
 	/**
@@ -180,6 +190,11 @@ export class ElementRenderer {
 			case 'linkedListNode': {
 				const llContainer = this.linkedListRenderer.render(element);
 				container.addChild(llContainer);
+				break;
+			}
+			case 'stackFrame': {
+				const stackContainer = this.stackRenderer.render(element);
+				container.addChild(stackContainer);
 				break;
 			}
 			default:
@@ -238,6 +253,11 @@ export class ElementRenderer {
 			case 'linkedListNode': {
 				const llContainer = this.linkedListRenderer.render(element);
 				container.addChild(llContainer);
+				break;
+			}
+			case 'stackFrame': {
+				const stackContainer = this.stackRenderer.render(element);
+				container.addChild(stackContainer);
 				break;
 			}
 			default:
