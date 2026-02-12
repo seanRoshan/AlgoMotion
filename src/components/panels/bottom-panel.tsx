@@ -1,7 +1,8 @@
 'use client';
 
-import { Code, FileCode2, SlidersHorizontal, Terminal } from 'lucide-react';
+import { Code, FileCode2, Terminal } from 'lucide-react';
 import { EmptyState } from '@/components/shared/empty-state';
+import { TimelinePanel } from '@/components/timeline/timeline-panel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -22,14 +23,10 @@ export function BottomPanel() {
 					DSL
 				</TabsTrigger>
 			</TabsList>
+			<TabsContent value="timeline" className="mt-0 h-full">
+				<TimelinePanel />
+			</TabsContent>
 			<ScrollArea className="flex-1">
-				<TabsContent value="timeline" className="mt-0">
-					<EmptyState
-						icon={SlidersHorizontal}
-						title="Timeline"
-						description="Animation timeline with keyframes and scrubber"
-					/>
-				</TabsContent>
 				<TabsContent value="code" className="mt-0">
 					<EmptyState
 						icon={Code}
