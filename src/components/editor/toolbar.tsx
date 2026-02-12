@@ -13,6 +13,7 @@ import {
 	Square,
 	Undo2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { AppLogo } from '@/components/shared/app-logo';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +33,10 @@ import {
 } from '@/components/ui/menubar';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { saveProject } from '@/hooks/use-auto-save';
+import { useExportStore } from '@/lib/stores/export-store';
 import { canRedo, canUndo, useHistoryStore } from '@/lib/stores/history-store';
+import { useProjectStore } from '@/lib/stores/project-store';
 import { useSceneStore } from '@/lib/stores/scene-store';
 import { useTimelineStore } from '@/lib/stores/timeline-store';
 import { useUIStore } from '@/lib/stores/ui-store';
@@ -79,6 +83,34 @@ function ToolbarButton({
 
 const SPEED_OPTIONS: PlaybackSpeed[] = [0.25, 0.5, 1, 1.5, 2, 4];
 
+function handleNewProject() {
+	const { isDirty } = useProjectStore.getState();
+	if (isDirty) {
+		const confirmed = window.confirm(
+			'You have unsaved changes. Are you sure you want to create a new project?',
+		);
+		if (!confirmed) return;
+	}
+	useSceneStore.getState().reset();
+	useHistoryStore.getState().clearHistory();
+	useTimelineStore.getState().reset();
+	useProjectStore.getState().clearProject();
+	toast.success('New project created');
+}
+
+async function handleSave() {
+	try {
+		await saveProject();
+		toast.success('Project saved');
+	} catch {
+		toast.error('Failed to save project');
+	}
+}
+
+function handleExport() {
+	useExportStore.getState().setDialogOpen(true);
+}
+
 export function Toolbar() {
 	const undoDisabled = useHistoryStore((s) => !canUndo(s));
 	const redoDisabled = useHistoryStore((s) => !canRedo(s));
@@ -104,14 +136,14 @@ export function Toolbar() {
 					<MenubarMenu>
 						<MenubarTrigger className="h-7 px-2 text-xs">File</MenubarTrigger>
 						<MenubarContent>
-							<MenubarItem>
+							<MenubarItem onSelect={handleNewProject}>
 								New Project <MenubarShortcut>Ctrl+N</MenubarShortcut>
 							</MenubarItem>
-							<MenubarItem>
+							<MenubarItem onSelect={handleSave}>
 								Save <MenubarShortcut>Ctrl+S</MenubarShortcut>
 							</MenubarItem>
 							<MenubarSeparator />
-							<MenubarItem>Export...</MenubarItem>
+							<MenubarItem onSelect={handleExport}>Export...</MenubarItem>
 						</MenubarContent>
 					</MenubarMenu>
 					<MenubarMenu>
