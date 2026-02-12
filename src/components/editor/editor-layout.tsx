@@ -10,6 +10,7 @@ import { RightPanel } from '@/components/panels/right-panel';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useAutoSave } from '@/hooks/use-auto-save';
 import { useGlobalShortcuts } from '@/hooks/use-global-shortcuts';
+import { usePlaybackAnnouncer } from '@/hooks/use-playback-announcer';
 import { useThemeSync } from '@/hooks/use-theme-sync';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { CommandPalette } from './command-palette';
@@ -19,6 +20,7 @@ export function EditorLayout() {
 	useGlobalShortcuts();
 	useAutoSave();
 	useThemeSync();
+	usePlaybackAnnouncer();
 
 	const leftRef = usePanelRef();
 	const rightRef = usePanelRef();
@@ -81,7 +83,7 @@ export function EditorLayout() {
 	);
 
 	return (
-		<div className="flex h-screen flex-col overflow-hidden">
+		<main id="main-content" className="flex h-screen flex-col overflow-hidden">
 			<Toolbar />
 			<CommandPalette />
 			<ResizablePanelGroup orientation="horizontal" className="flex-1">
@@ -138,6 +140,6 @@ export function EditorLayout() {
 					<RightPanel />
 				</ResizablePanel>
 			</ResizablePanelGroup>
-		</div>
+		</main>
 	);
 }

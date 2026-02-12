@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { CanvasA11yLayer } from '@/components/a11y/canvas-a11y-layer';
 import { useCanvasKeyboard } from '@/hooks/use-canvas-keyboard';
 import { SceneManager } from '@/lib/pixi/scene-manager';
 import { useSceneStore } from '@/lib/stores/scene-store';
@@ -197,6 +198,8 @@ export function PixiCanvas() {
 				role="application"
 				aria-label="Canvas workspace"
 			/>
+			{/* Accessible description of canvas contents for screen readers */}
+			<CanvasA11yLayer />
 		</div>
 	);
 }
