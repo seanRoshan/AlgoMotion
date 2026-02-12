@@ -273,6 +273,18 @@ describe('ElementRenderer', () => {
 			expect(container?.visible).toBe(false);
 		});
 
+		it('calls removeChildren before rebuilding', () => {
+			const renderer = new ElementRenderer(mockPixi);
+			const element = makeElement({ id: 'update-rebuild' });
+			renderer.createElement(element);
+
+			const container = renderer.getDisplayObject('update-rebuild');
+			const updated = makeElement({ id: 'update-rebuild', label: 'Updated' });
+			renderer.updateElement(updated);
+
+			expect(container?.removeChildren).toHaveBeenCalled();
+		});
+
 		it('handles update for nonexistent element gracefully', () => {
 			const renderer = new ElementRenderer(mockPixi);
 			const element = makeElement({ id: 'nonexistent' });

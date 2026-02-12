@@ -61,6 +61,11 @@ describe('shared renderer utilities', () => {
 			expect(points).toHaveLength(0);
 		});
 
+		it('returns empty for circle (handled separately in renderers)', () => {
+			const points = calculateArrowheadPoints(100, 0, 0, 'circle', 2);
+			expect(points).toHaveLength(0);
+		});
+
 		it('triangle tip is at the endpoint', () => {
 			const points = calculateArrowheadPoints(100, 0, 0, 'triangle', 2);
 			// First point (tip) should be at the endpoint

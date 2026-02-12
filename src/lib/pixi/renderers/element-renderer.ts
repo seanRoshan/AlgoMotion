@@ -7,6 +7,7 @@ import { calculateArrowheadPoints, hexToPixiColor } from './shared';
  */
 interface PixiContainer {
 	addChild(...children: unknown[]): void;
+	removeChildren(): void;
 	destroy(options?: { children: boolean }): void;
 	position: { set(x: number, y: number): void; x: number; y: number };
 	alpha: number;
@@ -133,13 +134,8 @@ export class ElementRenderer {
 
 		this.applyCommonProps(container, element);
 
-		// Rebuild type-specific children — destroy all existing children
-		for (const child of [...container.children]) {
-			if (child && typeof (child as PixiGraphics).destroy === 'function') {
-				(child as PixiGraphics).destroy();
-			}
-		}
-		container.children.length = 0;
+		// Rebuild type-specific children — properly remove and destroy
+		container.removeChildren();
 
 		switch (element.type) {
 			case 'node':
