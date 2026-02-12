@@ -1,10 +1,11 @@
 'use client';
 
-import { Layers, LayoutTemplate } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ElementLibrary } from './element-library';
+import { TemplateGallery } from './template-gallery';
 
 export function LeftPanel() {
 	return (
@@ -25,11 +26,7 @@ export function LeftPanel() {
 					<ElementLibrary />
 				</TabsContent>
 				<TabsContent value="templates" className="mt-0">
-					<EmptyState
-						icon={LayoutTemplate}
-						title="Templates"
-						description="Browse and load pre-built algorithm templates"
-					/>
+					<TemplateGallery />
 				</TabsContent>
 				<TabsContent value="layers" className="mt-0">
 					<EmptyState
