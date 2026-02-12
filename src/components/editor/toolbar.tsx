@@ -35,6 +35,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { canRedo, canUndo, useHistoryStore } from '@/lib/stores/history-store';
 import { useSceneStore } from '@/lib/stores/scene-store';
 import { useTimelineStore } from '@/lib/stores/timeline-store';
+import { useUIStore } from '@/lib/stores/ui-store';
 import type { PlaybackSpeed } from '@/types';
 import { ThemeToggle } from './theme-toggle';
 import { ToolSelector } from './tool-selector';
@@ -137,17 +138,17 @@ export function Toolbar() {
 					<MenubarMenu>
 						<MenubarTrigger className="h-7 px-2 text-xs">View</MenubarTrigger>
 						<MenubarContent>
-							<MenubarItem>
+							<MenubarItem onSelect={() => useUIStore.getState().togglePanel('left')}>
 								Toggle Left Panel <MenubarShortcut>Ctrl+B</MenubarShortcut>
 							</MenubarItem>
-							<MenubarItem>
+							<MenubarItem onSelect={() => useUIStore.getState().togglePanel('right')}>
 								Toggle Right Panel <MenubarShortcut>Ctrl+I</MenubarShortcut>
 							</MenubarItem>
-							<MenubarItem>
+							<MenubarItem onSelect={() => useUIStore.getState().togglePanel('bottom')}>
 								Toggle Bottom Panel <MenubarShortcut>Ctrl+`</MenubarShortcut>
 							</MenubarItem>
 							<MenubarSeparator />
-							<MenubarItem>
+							<MenubarItem onSelect={() => useUIStore.getState().toggleCommandPalette()}>
 								Command Palette <MenubarShortcut>Ctrl+K</MenubarShortcut>
 							</MenubarItem>
 						</MenubarContent>

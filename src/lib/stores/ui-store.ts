@@ -33,6 +33,7 @@ export interface UIState {
 	tool: ToolMode;
 	panels: PanelVisibility;
 	panelSizes: PanelSizes;
+	lastPanelSizes: PanelSizes;
 	activeBottomTab: BottomTab;
 	activeLeftTab: LeftTab;
 	activeRightTab: RightTab;
@@ -67,6 +68,7 @@ const initialState: UIState = {
 	tool: 'select',
 	panels: { left: true, right: true, bottom: true },
 	panelSizes: { left: 18, right: 20, bottom: 35 },
+	lastPanelSizes: { left: 18, right: 20, bottom: 35 },
 	activeBottomTab: 'timeline',
 	activeLeftTab: 'elements',
 	activeRightTab: 'properties',
@@ -90,17 +92,36 @@ export const useUIStore = create<UIStore>()(
 
 				togglePanel: (panel) =>
 					set((state) => {
+						if (state.panels[panel]) {
+							// Collapsing: save current size before hiding
+							state.lastPanelSizes[panel] = state.panelSizes[panel];
+						} else {
+							// Expanding: restore saved size
+							state.panelSizes[panel] = state.lastPanelSizes[panel];
+						}
 						state.panels[panel] = !state.panels[panel];
 					}),
 
 				setPanelVisible: (panel, visible) =>
 					set((state) => {
+						if (!visible && state.panels[panel]) {
+							// Collapsing: save current size
+							state.lastPanelSizes[panel] = state.panelSizes[panel];
+						} else if (visible && !state.panels[panel]) {
+							// Expanding: restore saved size
+							state.panelSizes[panel] = state.lastPanelSizes[panel];
+						}
 						state.panels[panel] = visible;
 					}),
 
 				setPanelSize: (panel, size) =>
 					set((state) => {
 						state.panelSizes[panel] = size;
+						// Keep lastPanelSizes in sync with user-set sizes so
+						// toggle always restores the most recent valid size
+						if (size > 0) {
+							state.lastPanelSizes[panel] = size;
+						}
 					}),
 
 				setActiveBottomTab: (tab) =>
@@ -161,6 +182,7 @@ export const useUIStore = create<UIStore>()(
 				partialize: (state) => ({
 					panels: state.panels,
 					panelSizes: state.panelSizes,
+					lastPanelSizes: state.lastPanelSizes,
 					activeBottomTab: state.activeBottomTab,
 					activeLeftTab: state.activeLeftTab,
 					activeRightTab: state.activeRightTab,
@@ -175,6 +197,15 @@ export const useUIStore = create<UIStore>()(
 					const sizes = merged.panelSizes;
 					if (sizes.left < 5 || sizes.right < 5 || sizes.bottom < 5) {
 						merged.panelSizes = { ...initialState.panelSizes };
+					}
+					// Ensure lastPanelSizes exists and has valid values
+					if (
+						!merged.lastPanelSizes ||
+						merged.lastPanelSizes.left < 5 ||
+						merged.lastPanelSizes.right < 5 ||
+						merged.lastPanelSizes.bottom < 5
+					) {
+						merged.lastPanelSizes = { ...initialState.panelSizes };
 					}
 					return merged;
 				},
