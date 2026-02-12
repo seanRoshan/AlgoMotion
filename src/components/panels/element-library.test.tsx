@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ELEMENT_CATALOG } from '@/lib/element-library/element-catalog';
+import { useSceneStore } from '@/lib/stores/scene-store';
 import { ElementLibrary } from './element-library';
 
 // Mock next-themes
@@ -14,9 +15,17 @@ vi.mock('next-themes', () => ({
 	}),
 }));
 
+// Mock pixi.js for SceneManager dependency chain
+vi.mock('pixi.js', () => ({}));
+
 describe('ElementLibrary', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		useSceneStore.getState().reset();
+	});
+
+	afterEach(() => {
+		useSceneStore.getState().reset();
 	});
 
 	it('renders all category headings', () => {
@@ -125,5 +134,23 @@ describe('ElementLibrary', () => {
 		render(<ElementLibrary />);
 		const primitives = ELEMENT_CATALOG.find((c) => c.id === 'primitives')!;
 		expect(screen.getByText(String(primitives.items.length))).toBeDefined();
+	});
+
+	it('clicking same element type twice places at different positions', async () => {
+		const user = userEvent.setup();
+		render(<ElementLibrary />);
+
+		const nodeBtn = screen.getByText('Node').closest('[role="button"]')!;
+		await user.click(nodeBtn);
+		await user.click(nodeBtn);
+
+		const { elements, elementIds } = useSceneStore.getState();
+		expect(elementIds).toHaveLength(2);
+
+		const first = elements[elementIds[0]!]!;
+		const second = elements[elementIds[1]!]!;
+		// Positions should differ due to cascading offset
+		expect(first.position.x).not.toBe(second.position.x);
+		expect(first.position.y).not.toBe(second.position.y);
 	});
 });

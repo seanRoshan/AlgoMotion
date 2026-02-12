@@ -20,6 +20,8 @@ import { useSceneStore } from '@/lib/stores/scene-store';
 
 const DRAG_MIME_TYPE = 'application/algomotion-element';
 
+let insertOffset = 0;
+
 function ElementCard({ item }: { item: LibraryItem }) {
 	const Icon = item.icon;
 	const addElement = useSceneStore((s) => s.addElement);
@@ -31,9 +33,10 @@ function ElementCard({ item }: { item: LibraryItem }) {
 	}
 
 	function handleClick() {
-		// Add element at canvas center (viewport center in canvas coords)
-		const centerX = -camera.x + 400 / camera.zoom;
-		const centerY = -camera.y + 300 / camera.zoom;
+		// Place at viewport center with cascading offset to avoid stacking
+		const centerX = -camera.x + 400 / camera.zoom + insertOffset;
+		const centerY = -camera.y + 300 / camera.zoom + insertOffset;
+		insertOffset = (insertOffset + 20) % 200;
 		const element = createElement(item.type, centerX, centerY);
 		addElement(element);
 	}
