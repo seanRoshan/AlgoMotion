@@ -46,12 +46,35 @@ export function PixiCanvas() {
 				});
 
 				// Apply initial store state
-				const { camera } = useSceneStore.getState();
+				const { camera, elements, elementIds } = useSceneStore.getState();
 				manager.setCamera(camera);
+				manager.syncElements(elements, elementIds);
 
 				const { gridVisible } = useUIStore.getState();
 				manager.setGridVisible(gridVisible);
 			});
+
+		// Subscribe to element changes: sync Zustand → SceneManager
+		let prevElementIds = useSceneStore.getState().elementIds;
+		const unsubElements = useSceneStore.subscribe((state) => {
+			const mgr = managerRef.current;
+			if (!mgr?.initialized) return;
+
+			// Full sync when element list changes (add/remove)
+			if (state.elementIds !== prevElementIds) {
+				prevElementIds = state.elementIds;
+				mgr.syncElements(state.elements, state.elementIds);
+				return;
+			}
+
+			// Incremental update when individual elements change
+			for (const id of state.elementIds) {
+				const element = state.elements[id];
+				if (element) {
+					mgr.updateElement(element);
+				}
+			}
+		});
 
 		// Subscribe to grid visibility changes
 		let prevGridVisible = useUIStore.getState().gridVisible;
@@ -80,6 +103,7 @@ export function PixiCanvas() {
 		});
 
 		return () => {
+			unsubElements();
 			unsubUI();
 			unsubCamera();
 			manager.destroy();
