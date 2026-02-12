@@ -197,6 +197,21 @@
 	opacity: 0.6;
 }
 
+/* Monaco Editor — DSL parse error decorations */
+.dsl-error-line {
+	background: rgba(239, 68, 68, 0.1);
+	border-left: 2px solid #ef4444;
+}
+
+.dsl-error-glyph {
+	background: #ef4444;
+	border-radius: 50%;
+	width: 8px !important;
+	height: 8px !important;
+	margin-left: 5px;
+	margin-top: 6px;
+}
+
 /* Monaco Editor — next-to-execute line (subtle indicator) */
 .next-line-indicator {
 	background: rgba(16, 185, 129, 0.08);

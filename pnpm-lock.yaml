@@ -62,6 +62,9 @@ importers:
       next-themes:
         specifier: latest
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      peggy:
+        specifier: ^5.0.6
+        version: 5.0.6
       pixi.js:
         specifier: ^8.16.0
         version: 8.16.0
@@ -1139,6 +1142,10 @@ packages:
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
+
+  '@peggyjs/from-mem@3.1.1':
+    resolution: {integrity: sha512-m5OEjgJaePWpyNtQCvRZkpLoV+z44eh6QIO9yEwQuOThdUdkECO3wcKLT3tFA3H8WM5bxU/K/dpmo7r/X16UEw==}
+    engines: {node: '>=20.8'}
 
   '@pixi/colord@2.9.6':
     resolution: {integrity: sha512-nezytU2pw587fQstUu1AsJZDVEynjskwOL+kibwcdxsMBFqPsFFNA7xl0ii/gXuDi6M0xj3mfRJj8pBSc2jCfA==}
@@ -3827,6 +3834,11 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
+  peggy@5.0.6:
+    resolution: {integrity: sha512-Sud8Zus0JAgE+U4zwkJv29OOaXhviFI7J90/6cGfy3OoqR8dpnieeF9a46dj0bTtqiFnrFatldA6ltQyOJvNmg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
     engines: {node: '>=4.0.0'}
@@ -4084,6 +4096,11 @@ packages:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
+  semver@7.7.2:
+    resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   semver@7.7.4:
     resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
     engines: {node: '>=10'}
@@ -4153,6 +4170,10 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+
+  source-map-generator@2.0.2:
+    resolution: {integrity: sha512-unCl5BQhF/us51DiT7SvlSY3QUPhyfAdHJxd8l7FXdwzqxli0UDMV2dEuei2SeGp3Z4rB/AJ9zKi1mGOp2K2ww==}
+    engines: {node: '>=20'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -5601,6 +5622,10 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.5.0(@opentelemetry/api@1.9.0)
+
+  '@peggyjs/from-mem@3.1.1':
+    dependencies:
+      semver: 7.7.2
 
   '@pixi/colord@2.9.6': {}
 
@@ -8225,6 +8250,12 @@ snapshots:
 
   pathe@2.0.3: {}
 
+  peggy@5.0.6:
+    dependencies:
+      '@peggyjs/from-mem': 3.1.1
+      commander: 14.0.3
+      source-map-generator: 2.0.2
+
   pg-int8@1.0.1: {}
 
   pg-protocol@1.11.0: {}
@@ -8551,6 +8582,8 @@ snapshots:
 
   semver@6.3.1: {}
 
+  semver@7.7.2: {}
+
   semver@7.7.4:
     optional: true
 
@@ -8707,6 +8740,8 @@ snapshots:
     dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
+
+  source-map-generator@2.0.2: {}
 
   source-map-js@1.2.1: {}
 

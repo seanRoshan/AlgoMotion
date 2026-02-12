@@ -1,12 +1,9 @@
 'use client';
 
-import { FileCode2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { CallStackPanel } from '@/components/debug/call-stack-panel';
 import { VariableWatchPanel } from '@/components/debug/variable-watch-panel';
-import { EmptyState } from '@/components/shared/empty-state';
 import { TimelinePanel } from '@/components/timeline/timeline-panel';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const LazyCodeEditor = dynamic(
@@ -28,6 +25,18 @@ const LazyConsolePanel = dynamic(
 		loading: () => (
 			<div className="flex h-full items-center justify-center">
 				<p className="text-xs text-muted-foreground/40">Loading console...</p>
+			</div>
+		),
+	},
+);
+
+const LazyDslEditor = dynamic(
+	() => import('@/components/dsl/dsl-editor').then((m) => ({ default: m.DslEditor })),
+	{
+		ssr: false,
+		loading: () => (
+			<div className="flex h-full items-center justify-center bg-[#1a1a2e]">
+				<p className="text-xs text-muted-foreground/40">Loading DSL editor...</p>
 			</div>
 		),
 	},
@@ -71,15 +80,9 @@ export function BottomPanel() {
 			<TabsContent value="callstack" className="mt-0 h-full">
 				<CallStackPanel />
 			</TabsContent>
-			<ScrollArea className="flex-1">
-				<TabsContent value="dsl" className="mt-0">
-					<EmptyState
-						icon={FileCode2}
-						title="DSL Editor"
-						description="Write animation scripts using the AlgoMotion DSL"
-					/>
-				</TabsContent>
-			</ScrollArea>
+			<TabsContent value="dsl" className="mt-0 h-full">
+				<LazyDslEditor />
+			</TabsContent>
 		</Tabs>
 	);
 }
