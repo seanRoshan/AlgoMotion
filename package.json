@@ -17,6 +17,8 @@
 	"dependencies": {
 		"@monaco-editor/react": "^4.7.0",
 		"@sentry/nextjs": "latest",
+		"@supabase/ssr": "^0.8.0",
+		"@supabase/supabase-js": "^2.95.3",
 		"@vercel/analytics": "latest",
 		"@vercel/speed-insights": "latest",
 		"acorn": "^8.15.0",

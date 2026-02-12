@@ -5,6 +5,13 @@ export const metadata: Metadata = {
 	description: 'Completing authentication...',
 };
 
+/**
+ * Fallback callback page — shown briefly during OAuth redirect.
+ *
+ * The actual OAuth code exchange happens in the Route Handler at
+ * /auth/callback/route.ts. This page at /callback is shown only
+ * if a user navigates directly to /callback.
+ */
 export default function CallbackPage() {
 	return (
 		<div className="space-y-4 text-center">
