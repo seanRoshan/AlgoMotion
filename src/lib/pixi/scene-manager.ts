@@ -1,6 +1,7 @@
 import type { Application, Container, ContainerChild } from 'pixi.js';
 import type { CameraState, Position, SceneElement, Size } from '@/types';
 import { GridRenderer } from './grid-renderer';
+import { AlignmentGuideRenderer } from './interactions/alignment-guide-renderer';
 import type { InteractionDeps } from './interactions/interaction-manager';
 import { InteractionManager } from './interactions/interaction-manager';
 import { SelectionRenderer } from './interactions/selection-renderer';
@@ -23,6 +24,7 @@ export interface InteractionStoreDeps {
 	moveElements: (updates: Record<string, Position>) => void;
 	resizeElement: (id: string, size: Size, position: Position) => void;
 	rotateElement: (id: string, rotation: number) => void;
+	getSnapEnabled: () => boolean;
 }
 
 export interface SceneManagerOptions {
@@ -55,6 +57,7 @@ export class SceneManager {
 	private elementRenderer: ElementRenderer | null = null;
 	private interactionManager: InteractionManager | null = null;
 	private selectionRenderer: SelectionRenderer | null = null;
+	private guideRenderer: AlignmentGuideRenderer | null = null;
 	private resizeObserver: ResizeObserver | null = null;
 
 	private _camera: CameraState = { x: 0, y: 0, zoom: 1 };
@@ -146,6 +149,12 @@ export class SceneManager {
 		this.selectionRenderer = new SelectionRenderer(
 			{ Graphics } as unknown as ConstructorParameters<typeof SelectionRenderer>[0],
 			this.selectionLayer as unknown as ConstructorParameters<typeof SelectionRenderer>[1],
+		);
+
+		// Initialize alignment guide renderer for snap guides
+		this.guideRenderer = new AlignmentGuideRenderer(
+			{ Graphics } as unknown as ConstructorParameters<typeof AlignmentGuideRenderer>[0],
+			this.selectionLayer as unknown as ConstructorParameters<typeof AlignmentGuideRenderer>[1],
 		);
 
 		// Apply initial camera
@@ -282,6 +291,7 @@ export class SceneManager {
 			getCameraZoom: () => this._camera.zoom,
 			screenToWorld: (sx, sy) => this.screenToWorld(sx, sy),
 			getContainerRect: () => this.container?.getBoundingClientRect() ?? null,
+			getGridSize: () => this._gridSize,
 			moveDisplayObject: (id, worldX, worldY) => {
 				const obj = this.elementRenderer?.getDisplayObject(id);
 				if (obj) {
@@ -305,7 +315,11 @@ export class SceneManager {
 			},
 		};
 
-		this.interactionManager = new InteractionManager(deps, this.selectionRenderer);
+		this.interactionManager = new InteractionManager(
+			deps,
+			this.selectionRenderer,
+			this.guideRenderer ?? undefined,
+		);
 	}
 
 	/**
@@ -360,6 +374,8 @@ export class SceneManager {
 		this.interactionManager?.destroy();
 		this.interactionManager = null;
 		this.selectionRenderer = null;
+		this.guideRenderer?.destroy();
+		this.guideRenderer = null;
 
 		this.elementRenderer?.destroyAll();
 		this.elementRenderer = null;

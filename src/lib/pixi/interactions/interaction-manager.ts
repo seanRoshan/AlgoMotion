@@ -1,9 +1,11 @@
 import type { Position, SceneElement, Size } from '@/types';
+import type { AlignmentGuideRenderer } from './alignment-guide-renderer';
 import { HitTester } from './hit-tester';
 import { DRAG_THRESHOLD, MIN_ELEMENT_SIZE } from './interaction-constants';
 import type { HandlePosition, InteractionState } from './interaction-state';
 import { computeBoundingBox, HANDLE_CURSORS } from './interaction-state';
 import type { SelectionRenderer } from './selection-renderer';
+import { SnapEngine, type SnapEngineDeps } from './snap-engine';
 
 /**
  * Dependency injection interface for the InteractionManager.
@@ -33,6 +35,10 @@ export interface InteractionDeps {
 
 	// Cursor
 	setCursor: (cursor: string) => void;
+
+	// Snap
+	getSnapEnabled: () => boolean;
+	getGridSize: () => number;
 }
 
 /**
@@ -50,15 +56,31 @@ export class InteractionManager {
 	private deps: InteractionDeps;
 	private hitTester = new HitTester();
 	private selectionRenderer: SelectionRenderer;
+	private guideRenderer: AlignmentGuideRenderer | null;
+	private snapEngine: SnapEngine;
 	private interaction: InteractionState = { state: 'idle' };
 
 	// Whether the clicked element was already selected before pointerdown.
 	// Used for "click-to-narrow" behavior in multi-selection.
 	private wasAlreadySelected = false;
 
-	constructor(deps: InteractionDeps, selectionRenderer: SelectionRenderer) {
+	constructor(
+		deps: InteractionDeps,
+		selectionRenderer: SelectionRenderer,
+		guideRenderer?: AlignmentGuideRenderer,
+	) {
 		this.deps = deps;
 		this.selectionRenderer = selectionRenderer;
+		this.guideRenderer = guideRenderer ?? null;
+
+		const snapDeps: SnapEngineDeps = {
+			getSnapEnabled: deps.getSnapEnabled,
+			getGridSize: deps.getGridSize,
+			getElements: deps.getElements,
+			getElementIds: deps.getElementIds,
+			getCameraZoom: deps.getCameraZoom,
+		};
+		this.snapEngine = new SnapEngine(snapDeps);
 	}
 
 	getInteractionState(): InteractionState {
@@ -162,6 +184,7 @@ export class InteractionManager {
 		// Resizing commits to store continuously — no final commit needed
 
 		this.selectionRenderer.clearMarquee();
+		this.guideRenderer?.clear();
 		this.interaction = { state: 'idle' };
 		this.deps.setCursor('default');
 		this.refreshSelection();
@@ -170,6 +193,7 @@ export class InteractionManager {
 	destroy(): void {
 		this.interaction = { state: 'idle' };
 		this.selectionRenderer.destroy();
+		this.guideRenderer?.destroy();
 	}
 
 	// ── Clicking state ──
@@ -259,15 +283,33 @@ export class InteractionManager {
 		const screenY = e.clientY - rect.top;
 		const world = this.deps.screenToWorld(screenX, screenY);
 
-		const dx = world.x - s.pointerStartWorld.x;
-		const dy = world.y - s.pointerStartWorld.y;
+		const rawDx = world.x - s.pointerStartWorld.x;
+		const rawDy = world.y - s.pointerStartWorld.y;
+
+		// Compute raw (unsnapped) positions for all dragged elements
+		const rawPositions: Record<string, Position> = {};
+		for (const [id, startPos] of Object.entries(s.elementStartPositions)) {
+			rawPositions[id] = { x: startPos.x + rawDx, y: startPos.y + rawDy };
+		}
+
+		// Run snap engine to get adjusted delta and alignment guides
+		const snapResult = this.snapEngine.computeSnap(
+			Object.keys(s.elementStartPositions),
+			rawPositions,
+		);
+
+		const dx = rawDx + snapResult.deltaX;
+		const dy = rawDy + snapResult.deltaY;
 
 		// Direct Pixi mutation for 60fps
 		for (const [id, startPos] of Object.entries(s.elementStartPositions)) {
 			this.deps.moveDisplayObject(id, startPos.x + dx, startPos.y + dy);
 		}
 
-		// Update selection overlay with dragged positions
+		// Render alignment guides
+		this.guideRenderer?.render(snapResult.guides, this.deps.getCameraZoom());
+
+		// Update selection overlay with snapped positions
 		const elements = this.deps.getElements();
 		const selectedIds = this.deps.getSelectedIds();
 		const adjusted: Record<string, SceneElement> = {};
@@ -299,10 +341,24 @@ export class InteractionManager {
 		const screenY = e.clientY - rect.top;
 		const world = this.deps.screenToWorld(screenX, screenY);
 
-		const dx = world.x - s.pointerStartWorld.x;
-		const dy = world.y - s.pointerStartWorld.y;
+		const rawDx = world.x - s.pointerStartWorld.x;
+		const rawDy = world.y - s.pointerStartWorld.y;
 
-		// Commit final positions to store (only for elements that still exist)
+		// Apply same snap logic for final commit
+		const rawPositions: Record<string, Position> = {};
+		for (const [id, startPos] of Object.entries(s.elementStartPositions)) {
+			rawPositions[id] = { x: startPos.x + rawDx, y: startPos.y + rawDy };
+		}
+
+		const snapResult = this.snapEngine.computeSnap(
+			Object.keys(s.elementStartPositions),
+			rawPositions,
+		);
+
+		const dx = rawDx + snapResult.deltaX;
+		const dy = rawDy + snapResult.deltaY;
+
+		// Commit final snapped positions to store
 		const elements = this.deps.getElements();
 		const updates: Record<string, Position> = {};
 		for (const [id, startPos] of Object.entries(s.elementStartPositions)) {

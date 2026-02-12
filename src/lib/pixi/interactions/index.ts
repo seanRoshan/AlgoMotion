@@ -1,6 +1,12 @@
+export { AlignmentGuideRenderer } from './alignment-guide-renderer';
 export { HitTester } from './hit-tester';
 export {
+	ALIGNMENT_SNAP_THRESHOLD,
 	DRAG_THRESHOLD,
+	GUIDE_ALPHA,
+	GUIDE_COLOR,
+	GUIDE_DASH_LENGTH,
+	GUIDE_GAP_LENGTH,
 	HANDLE_HIT_AREA,
 	HANDLE_SIZE,
 	MIN_ELEMENT_SIZE,
@@ -24,3 +30,5 @@ export {
 	HANDLE_CURSORS,
 } from './interaction-state';
 export { SelectionRenderer } from './selection-renderer';
+export type { AlignmentGuide, SnapEngineDeps, SnapResult } from './snap-engine';
+export { SnapEngine } from './snap-engine';
