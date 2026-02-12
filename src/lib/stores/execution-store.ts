@@ -12,6 +12,9 @@ export interface ExecutionStoreState {
 export interface ExecutionActions {
 	setStatus: (status: ExecutionStatus) => void;
 	setCurrentLine: (line: number) => void;
+	addVisitedLine: (line: number) => void;
+	clearVisitedLines: () => void;
+	setNextLine: (line: number) => void;
 	setVariables: (variables: Record<string, VariableSnapshot>) => void;
 	pushCallStack: (frame: StackFrame) => void;
 	popCallStack: () => void;
@@ -24,6 +27,9 @@ export interface ExecutionActions {
 	removeBreakpoint: (line: number) => void;
 	toggleBreakpoint: (line: number) => void;
 	setSourceCode: (code: string) => void;
+	setLineAnnotation: (line: number, elementId: string) => void;
+	removeLineAnnotation: (line: number) => void;
+	clearLineAnnotations: () => void;
 	reset: () => void;
 }
 
@@ -31,6 +37,8 @@ export type ExecutionStore = ExecutionStoreState & ExecutionActions;
 
 const initialExecutionState: ExecutionState = {
 	currentLine: 0,
+	visitedLines: [],
+	nextLine: 0,
 	callStack: [],
 	variables: {},
 	heap: {},
@@ -38,6 +46,7 @@ const initialExecutionState: ExecutionState = {
 	status: 'idle',
 	stepCount: 0,
 	animationTime: 0,
+	lineAnnotations: {},
 };
 
 const initialState: ExecutionStoreState = {
@@ -59,6 +68,23 @@ export const useExecutionStore = create<ExecutionStore>()(
 			setCurrentLine: (line) =>
 				set((state) => {
 					state.executionState.currentLine = line;
+				}),
+
+			addVisitedLine: (line) =>
+				set((state) => {
+					if (!state.executionState.visitedLines.includes(line)) {
+						state.executionState.visitedLines.push(line);
+					}
+				}),
+
+			clearVisitedLines: () =>
+				set((state) => {
+					state.executionState.visitedLines = [];
+				}),
+
+			setNextLine: (line) =>
+				set((state) => {
+					state.executionState.nextLine = line;
 				}),
 
 			setVariables: (variables) =>
@@ -126,6 +152,21 @@ export const useExecutionStore = create<ExecutionStore>()(
 			setSourceCode: (code) =>
 				set((state) => {
 					state.sourceCode = code;
+				}),
+
+			setLineAnnotation: (line, elementId) =>
+				set((state) => {
+					state.executionState.lineAnnotations[line] = elementId;
+				}),
+
+			removeLineAnnotation: (line) =>
+				set((state) => {
+					delete state.executionState.lineAnnotations[line];
+				}),
+
+			clearLineAnnotations: () =>
+				set((state) => {
+					state.executionState.lineAnnotations = {};
 				}),
 
 			reset: () => set(initialState),
