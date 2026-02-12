@@ -138,4 +138,12 @@ export const shortcutRegistry: ShortcutDefinition[] = [
 		category: 'View',
 		keys: { key: '`', mod: true },
 	},
+
+	// General
+	{
+		id: 'command-palette',
+		label: 'Command Palette',
+		category: 'General',
+		keys: { key: 'k', mod: true },
+	},
 ];
