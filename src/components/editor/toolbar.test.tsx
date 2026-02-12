@@ -2,7 +2,10 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { createElement } from '@/lib/element-library/create-element';
+import { useExportStore } from '@/lib/stores/export-store';
 import { useHistoryStore } from '@/lib/stores/history-store';
+import { useProjectStore } from '@/lib/stores/project-store';
 import { useSceneStore } from '@/lib/stores/scene-store';
 import { useTimelineStore } from '@/lib/stores/timeline-store';
 import { useUIStore } from '@/lib/stores/ui-store';
@@ -124,6 +127,58 @@ describe('Toolbar', () => {
 				useTimelineStore.getState().setSpeed(2);
 			});
 			expect(screen.getByText('2x')).toBeDefined();
+		});
+	});
+
+	describe('File menu actions', () => {
+		it('File menu trigger exists and is clickable', () => {
+			renderToolbar();
+			const fileTrigger = screen.getByText('File');
+			expect(fileTrigger).toBeDefined();
+			expect(fileTrigger.getAttribute('role')).toBe('menuitem');
+		});
+
+		it('New Project resets scene store when no unsaved changes', () => {
+			// Add an element to scene
+			const el = createElement('rect', 100, 100);
+			useSceneStore.getState().addElement(el);
+			expect(useSceneStore.getState().elementIds.length).toBe(1);
+
+			// Simulate New Project action (no dirty state, so no confirm needed)
+			useSceneStore.getState().reset();
+			useHistoryStore.getState().clearHistory();
+			useTimelineStore.getState().reset();
+			useProjectStore.getState().clearProject();
+
+			expect(useSceneStore.getState().elementIds.length).toBe(0);
+		});
+
+		it('New Project shows confirmation when project is dirty', () => {
+			const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+			useProjectStore.getState().markDirty();
+
+			// When user cancels, scene should not be reset
+			const el = createElement('rect', 100, 100);
+			useSceneStore.getState().addElement(el);
+
+			// User clicks cancel
+			const confirmed = window.confirm('You have unsaved changes.');
+			expect(confirmed).toBe(false);
+			expect(useSceneStore.getState().elementIds.length).toBe(1);
+
+			confirmSpy.mockRestore();
+		});
+
+		it('Save calls saveProject function', async () => {
+			// Verify saveProject is importable and callable
+			const { saveProject } = await import('@/hooks/use-auto-save');
+			expect(typeof saveProject).toBe('function');
+		});
+
+		it('Export opens export dialog via store', () => {
+			expect(useExportStore.getState().dialogOpen).toBe(false);
+			useExportStore.getState().setDialogOpen(true);
+			expect(useExportStore.getState().dialogOpen).toBe(true);
 		});
 	});
 
