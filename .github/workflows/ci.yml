@@ -88,6 +88,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [lint, type-check]
     steps:
       - uses: actions/checkout@v4
