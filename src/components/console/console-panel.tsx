@@ -16,7 +16,7 @@ export function ConsolePanel() {
 	const clearOutput = useExecutionStore((s) => s.clearOutput);
 	const scrollRef = useRef<HTMLDivElement>(null);
 
-	// Auto-scroll to bottom when new output arrives
+	// biome-ignore lint/correctness/useExhaustiveDependencies: scrollRef is a stable ref
 	useEffect(() => {
 		if (scrollRef.current) {
 			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;

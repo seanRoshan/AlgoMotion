@@ -145,7 +145,7 @@ export class PipelineRenderer {
 		const { style, metadata } = element;
 
 		const depth = (metadata.depth as number as PipelineDepth) ?? 5;
-		const config = PIPELINE_CONFIGS[depth] ?? PIPELINE_CONFIGS[5];
+		const _config = PIPELINE_CONFIGS[depth] ?? PIPELINE_CONFIGS[5];
 		const instructions = (metadata.instructions as unknown as PipelineInstruction[]) ?? [];
 		const currentCycle = (metadata.currentCycle as number) ?? -1;
 		const cellWidth = (metadata.cellWidth as number) ?? 60;

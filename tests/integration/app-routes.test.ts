@@ -19,10 +19,10 @@ describe('App Router page structure (Issue #8)', () => {
 		});
 
 		it('has dashboard routes (index, templates, settings)', () => {
-			expect(existsSync(resolve(root, 'src/app/(dashboard)/layout.tsx'))).toBe(true);
-			expect(existsSync(resolve(root, 'src/app/(dashboard)/page.tsx'))).toBe(true);
-			expect(existsSync(resolve(root, 'src/app/(dashboard)/templates/page.tsx'))).toBe(true);
-			expect(existsSync(resolve(root, 'src/app/(dashboard)/settings/page.tsx'))).toBe(true);
+			expect(existsSync(resolve(root, 'src/app/dashboard/layout.tsx'))).toBe(true);
+			expect(existsSync(resolve(root, 'src/app/dashboard/page.tsx'))).toBe(true);
+			expect(existsSync(resolve(root, 'src/app/dashboard/templates/page.tsx'))).toBe(true);
+			expect(existsSync(resolve(root, 'src/app/dashboard/settings/page.tsx'))).toBe(true);
 		});
 
 		it('has editor route with layout', () => {
@@ -67,19 +67,19 @@ describe('App Router page structure (Issue #8)', () => {
 		});
 
 		it('dashboard page has metadata', async () => {
-			const mod = await import('../../src/app/(dashboard)/page');
+			const mod = await import('../../src/app/dashboard/page');
 			expect(mod.metadata).toBeDefined();
 			expect(mod.metadata.title).toBeTruthy();
 		});
 
 		it('templates page has metadata', async () => {
-			const mod = await import('../../src/app/(dashboard)/templates/page');
+			const mod = await import('../../src/app/dashboard/templates/page');
 			expect(mod.metadata).toBeDefined();
 			expect(mod.metadata.title).toBeTruthy();
 		});
 
 		it('settings page has metadata', async () => {
-			const mod = await import('../../src/app/(dashboard)/settings/page');
+			const mod = await import('../../src/app/dashboard/settings/page');
 			expect(mod.metadata).toBeDefined();
 			expect(mod.metadata.title).toBeTruthy();
 		});

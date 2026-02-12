@@ -226,7 +226,7 @@ export function cpuFullCycle(
  */
 export function cpuDataFlowHighlight(
 	buses: AnimatableBus[],
-	highlightColor: number,
+	_highlightColor: number,
 ): gsap.core.Timeline {
 	const tl = gsap.timeline();
 

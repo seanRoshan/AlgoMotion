@@ -57,9 +57,12 @@ export function EditorLayout() {
 		else if (!panels.bottom && !panel.isCollapsed()) panel.collapse();
 	}, [panels.bottom, bottomRef]);
 
-	// Track resize and sync collapsed state back to store
+	// Track resize and sync collapsed state back to store.
+	// onResize fires on mount with prevPanelSize=undefined — skip that to avoid
+	// persisting corrupted pixel-based values over the correct percentages.
 	const handleLeftResize = useCallback(
-		(size: PanelSize) => {
+		(size: PanelSize, _id: string | number | undefined, prevSize: PanelSize | undefined) => {
+			if (!prevSize) return; // Skip initial mount callback
 			setPanelSize('left', size.asPercentage);
 			// Sync collapsed state from drag-to-collapse
 			if (size.asPercentage === 0 && panels.left) setPanelVisible('left', false);
@@ -69,7 +72,8 @@ export function EditorLayout() {
 	);
 
 	const handleRightResize = useCallback(
-		(size: PanelSize) => {
+		(size: PanelSize, _id: string | number | undefined, prevSize: PanelSize | undefined) => {
+			if (!prevSize) return;
 			setPanelSize('right', size.asPercentage);
 			if (size.asPercentage === 0 && panels.right) setPanelVisible('right', false);
 			else if (size.asPercentage > 0 && !panels.right) setPanelVisible('right', true);
@@ -78,7 +82,8 @@ export function EditorLayout() {
 	);
 
 	const handleBottomResize = useCallback(
-		(size: PanelSize) => {
+		(size: PanelSize, _id: string | number | undefined, prevSize: PanelSize | undefined) => {
+			if (!prevSize) return;
 			setPanelSize('bottom', size.asPercentage);
 			if (size.asPercentage === 0 && panels.bottom) setPanelVisible('bottom', false);
 			else if (size.asPercentage > 0 && !panels.bottom) setPanelVisible('bottom', true);
@@ -96,9 +101,9 @@ export function EditorLayout() {
 				<ResizablePanel
 					id="left-panel"
 					panelRef={leftRef}
-					defaultSize={panelSizes.left}
-					minSize={12}
-					maxSize={28}
+					defaultSize={`${panelSizes.left}%`}
+					minSize="12%"
+					maxSize="28%"
 					collapsible
 					onResize={handleLeftResize}
 					className="bg-card"
@@ -108,9 +113,16 @@ export function EditorLayout() {
 
 				<ResizableHandle withHandle />
 
-				<ResizablePanel id="center-panel" defaultSize={100 - panelSizes.left - panelSizes.right}>
+				<ResizablePanel
+					id="center-panel"
+					defaultSize={`${100 - panelSizes.left - panelSizes.right}%`}
+				>
 					<ResizablePanelGroup orientation="vertical">
-						<ResizablePanel id="canvas-panel" defaultSize={100 - panelSizes.bottom} minSize={30}>
+						<ResizablePanel
+							id="canvas-panel"
+							defaultSize={`${100 - panelSizes.bottom}%`}
+							minSize="30%"
+						>
 							<PixiCanvas />
 						</ResizablePanel>
 
@@ -119,9 +131,9 @@ export function EditorLayout() {
 						<ResizablePanel
 							id="bottom-panel"
 							panelRef={bottomRef}
-							defaultSize={panelSizes.bottom}
-							minSize={10}
-							maxSize={60}
+							defaultSize={`${panelSizes.bottom}%`}
+							minSize="10%"
+							maxSize="60%"
 							collapsible
 							onResize={handleBottomResize}
 							className="bg-card"
@@ -136,9 +148,9 @@ export function EditorLayout() {
 				<ResizablePanel
 					id="right-panel"
 					panelRef={rightRef}
-					defaultSize={panelSizes.right}
-					minSize={14}
-					maxSize={30}
+					defaultSize={`${panelSizes.right}%`}
+					minSize="14%"
+					maxSize="30%"
 					collapsible
 					onResize={handleRightResize}
 					className="bg-card"

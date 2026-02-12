@@ -18,7 +18,6 @@ function createPixiMock(...gfxInstances: ReturnType<typeof mockGraphics>[]) {
 	let idx = 0;
 	return {
 		Graphics: vi.fn(function (this: Record<string, unknown>) {
-			// biome-ignore lint/style/noNonNullAssertion: gfxInstances always has entries
 			const g = gfxInstances[idx++ % gfxInstances.length]!;
 			this.clear = g.clear;
 			this.moveTo = g.moveTo;

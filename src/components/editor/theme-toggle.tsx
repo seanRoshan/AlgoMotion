@@ -2,6 +2,7 @@
 
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
@@ -21,13 +22,17 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }
 export function ThemeToggle() {
 	const { setTheme: setNextTheme, resolvedTheme } = useTheme();
 	const setStoreTheme = useUIStore((s) => s.setTheme);
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => setMounted(true), []);
 
 	function handleSelect(theme: ThemePreference) {
 		setStoreTheme(theme);
 		setNextTheme(theme);
 	}
 
-	const CurrentIcon = resolvedTheme === 'dark' ? Moon : Sun;
+	// Render Sun during SSR to avoid hydration mismatch (resolvedTheme is undefined server-side)
+	const CurrentIcon = mounted && resolvedTheme === 'dark' ? Moon : Sun;
 
 	return (
 		<DropdownMenu>

@@ -10,20 +10,39 @@ import {
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { createElement } from '@/lib/element-library/create-element';
 import {
 	ELEMENT_CATALOG,
 	type LibraryCategory,
 	type LibraryItem,
 } from '@/lib/element-library/element-catalog';
+import { useSceneStore } from '@/lib/stores/scene-store';
 
 const DRAG_MIME_TYPE = 'application/algomotion-element';
 
 function ElementCard({ item }: { item: LibraryItem }) {
 	const Icon = item.icon;
+	const addElement = useSceneStore((s) => s.addElement);
+	const camera = useSceneStore((s) => s.camera);
 
 	function handleDragStart(e: React.DragEvent) {
 		e.dataTransfer.setData(DRAG_MIME_TYPE, item.type);
 		e.dataTransfer.effectAllowed = 'copy';
+	}
+
+	function handleClick() {
+		// Add element at canvas center (viewport center in canvas coords)
+		const centerX = -camera.x + 400 / camera.zoom;
+		const centerY = -camera.y + 300 / camera.zoom;
+		const element = createElement(item.type, centerX, centerY);
+		addElement(element);
+	}
+
+	function handleKeyDown(e: React.KeyboardEvent) {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			handleClick();
+		}
 	}
 
 	return (
@@ -33,6 +52,8 @@ function ElementCard({ item }: { item: LibraryItem }) {
 			tabIndex={0}
 			draggable
 			onDragStart={handleDragStart}
+			onClick={handleClick}
+			onKeyDown={handleKeyDown}
 			className="flex cursor-grab flex-col items-center gap-1.5 rounded-md border border-transparent p-2 text-center transition-colors hover:border-border hover:bg-accent active:cursor-grabbing"
 		>
 			<Icon className="h-6 w-6 text-muted-foreground" />

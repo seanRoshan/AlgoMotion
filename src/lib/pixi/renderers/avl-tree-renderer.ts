@@ -301,8 +301,10 @@ export class AvlTreeRenderer {
 		levels.set(rootId, 0);
 
 		while (queue.length > 0) {
+			// biome-ignore lint/style/noNonNullAssertion: guaranteed by length check and prior set
 			const current = queue.shift()!;
 			const children = childrenMap.get(current);
+			// biome-ignore lint/style/noNonNullAssertion: level set before BFS traversal
 			const currentLevel = levels.get(current)!;
 
 			if (children?.left) {

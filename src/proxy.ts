@@ -1,5 +1,5 @@
 /**
- * Next.js root middleware — delegates to Supabase session refresh.
+ * Next.js root proxy — delegates to Supabase session refresh.
  *
  * Runs on every matching request to keep auth sessions alive
  * and protect routes that require authentication.
@@ -10,7 +10,7 @@
 import type { NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	return updateSession(request);
 }
 

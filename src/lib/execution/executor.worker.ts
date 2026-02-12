@@ -72,7 +72,6 @@ self.onmessage = (e: MessageEvent) => {
 				// Intentional use of Function constructor inside Web Worker sandbox.
 				// The Worker is isolated: no DOM, no main thread access.
 				// Code is pre-instrumented (AST-parsed and transformed) before reaching here.
-				// biome-ignore lint/security/noGlobalEval: Sandboxed Worker execution of pre-instrumented code
 				const fn = new Function('__step__', '__output__', code);
 				fn(__step__, __output__);
 

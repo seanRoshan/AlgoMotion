@@ -168,7 +168,6 @@ export const DSL_LANGUAGE_CONFIG: monaco.languages.LanguageConfiguration = {
  * DSL completion suggestions.
  * Uses Monaco snippet syntax (e.g. ${1:name}) which Biome misidentifies as template literals.
  */
-// biome-ignore lint/suspicious/noTemplateCurlyInString: Monaco snippet syntax, not JS templates
 const DSL_COMPLETIONS: Array<{
 	label: string;
 	kind: 'Keyword' | 'Function' | 'Snippet';

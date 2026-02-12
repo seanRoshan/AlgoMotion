@@ -169,6 +169,15 @@ export const useUIStore = create<UIStore>()(
 					theme: state.theme,
 					minimapVisible: state.minimapVisible,
 				}),
+				merge: (persisted, current) => {
+					const merged = { ...current, ...(persisted as Partial<UIState>) };
+					// Reject corrupted panel sizes (must be reasonable percentages)
+					const sizes = merged.panelSizes;
+					if (sizes.left < 5 || sizes.right < 5 || sizes.bottom < 5) {
+						merged.panelSizes = { ...initialState.panelSizes };
+					}
+					return merged;
+				},
 			},
 		),
 		{ name: 'UIStore', enabled: process.env.NODE_ENV === 'development' },

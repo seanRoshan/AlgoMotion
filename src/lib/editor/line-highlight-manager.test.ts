@@ -5,7 +5,7 @@ import { LineHighlightManager } from './line-highlight-manager';
 function createMockEditor() {
 	const decorations: string[] = [];
 	return {
-		deltaDecorations: vi.fn((oldIds: string[], newDecorations: unknown[]) => {
+		deltaDecorations: vi.fn((_oldIds: string[], newDecorations: unknown[]) => {
 			// Return new IDs for each decoration
 			return newDecorations.map((_, i) => `dec-${decorations.length + i}`);
 		}),

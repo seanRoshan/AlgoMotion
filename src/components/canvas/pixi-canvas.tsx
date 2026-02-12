@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CanvasA11yLayer } from '@/components/a11y/canvas-a11y-layer';
 import { useCanvasKeyboard } from '@/hooks/use-canvas-keyboard';
+import { createElement } from '@/lib/element-library/create-element';
 import { SceneManager } from '@/lib/pixi/scene-manager';
 import { useSceneStore } from '@/lib/stores/scene-store';
 import { useUIStore } from '@/lib/stores/ui-store';
+import type { ElementType } from '@/types/elements';
 import { CanvasRuler } from './canvas-ruler';
 
 /**
@@ -27,10 +29,42 @@ export function PixiCanvas() {
 	const [cursorX, setCursorX] = useState<number | null>(null);
 	const [cursorY, setCursorY] = useState<number | null>(null);
 
+	const addElement = useSceneStore((s) => s.addElement);
+
 	// Refresh selection overlay after keyboard-driven changes
 	const handleSelectionChange = useCallback(() => {
 		managerRef.current?.getInteractionManager()?.refreshSelection();
 	}, []);
+
+	// Handle element drops from the library
+	const handleDragOver = useCallback((e: React.DragEvent) => {
+		if (e.dataTransfer.types.includes('application/algomotion-element')) {
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'copy';
+		}
+	}, []);
+
+	const handleDrop = useCallback(
+		(e: React.DragEvent) => {
+			const type = e.dataTransfer.getData('application/algomotion-element') as ElementType;
+			if (!type) return;
+			e.preventDefault();
+
+			const container = containerRef.current;
+			if (!container) return;
+
+			const rect = container.getBoundingClientRect();
+			const camera = useSceneStore.getState().camera;
+
+			// Convert screen coordinates to canvas coordinates (accounting for camera pan/zoom)
+			const canvasX = (e.clientX - rect.left) / camera.zoom - camera.x;
+			const canvasY = (e.clientY - rect.top) / camera.zoom - camera.y;
+
+			const element = createElement(type, canvasX, canvasY);
+			addElement(element);
+		},
+		[addElement],
+	);
 
 	useCanvasKeyboard(containerRef, handleSelectionChange);
 
@@ -63,6 +97,7 @@ export function PixiCanvas() {
 		const container = containerRef.current;
 		if (!container) return;
 
+		let cancelled = false;
 		const manager = new SceneManager();
 		managerRef.current = manager;
 
@@ -77,6 +112,9 @@ export function PixiCanvas() {
 				gridSize: 20,
 			})
 			.then(() => {
+				// Abort if React unmounted during async init (hydration remount)
+				if (cancelled) return;
+
 				// SceneManager → Zustand: sync camera on pan/zoom
 				manager.setCameraChangeHandler((camera) => {
 					if (isSyncingCamera) return;
@@ -161,6 +199,7 @@ export function PixiCanvas() {
 		});
 
 		return () => {
+			cancelled = true;
 			unsubElements();
 			unsubUI();
 			unsubCamera();
@@ -197,6 +236,8 @@ export function PixiCanvas() {
 				style={{ top: RULER_SIZE, left: RULER_SIZE, right: 0, bottom: 0 }}
 				role="application"
 				aria-label="Canvas workspace"
+				onDragOver={handleDragOver}
+				onDrop={handleDrop}
 			/>
 			{/* Accessible description of canvas contents for screen readers */}
 			<CanvasA11yLayer />

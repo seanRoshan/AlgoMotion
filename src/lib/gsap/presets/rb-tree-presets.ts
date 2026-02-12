@@ -27,7 +27,7 @@ interface AnimatableNode {
  */
 export function rbRecolor(
 	node: AnimatableNode,
-	fromColor: number,
+	_fromColor: number,
 	toColor: number,
 ): gsap.core.Timeline {
 	const tl = gsap.timeline();

@@ -75,6 +75,7 @@ export class SceneManager {
 
 	private container: HTMLElement | null = null;
 	private onCameraChange: ((camera: CameraState) => void) | null = null;
+	private _destroyed = false;
 
 	get camera(): CameraState {
 		return { ...this._camera };
@@ -111,6 +112,12 @@ export class SceneManager {
 			autoDensity: true,
 			resizeTo: options.container,
 		});
+
+		// Abort if destroyed during async init (e.g., React hydration remount)
+		if (this._destroyed) {
+			app.destroy(true, { children: true });
+			return;
+		}
 
 		this.app = app;
 		options.container.appendChild(app.canvas);
@@ -368,6 +375,7 @@ export class SceneManager {
 	 * Clean up all resources.
 	 */
 	destroy(): void {
+		this._destroyed = true;
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
 
