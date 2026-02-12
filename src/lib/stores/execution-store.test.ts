@@ -167,6 +167,72 @@ describe('executionStore', () => {
 		});
 	});
 
+	describe('visited lines', () => {
+		it('starts with empty visited lines', () => {
+			expect(useExecutionStore.getState().executionState.visitedLines).toEqual([]);
+		});
+
+		it('adds a visited line', () => {
+			useExecutionStore.getState().addVisitedLine(5);
+			expect(useExecutionStore.getState().executionState.visitedLines).toContain(5);
+		});
+
+		it('does not duplicate visited lines', () => {
+			useExecutionStore.getState().addVisitedLine(5);
+			useExecutionStore.getState().addVisitedLine(5);
+			expect(useExecutionStore.getState().executionState.visitedLines).toEqual([5]);
+		});
+
+		it('accumulates multiple visited lines', () => {
+			useExecutionStore.getState().addVisitedLine(1);
+			useExecutionStore.getState().addVisitedLine(3);
+			useExecutionStore.getState().addVisitedLine(5);
+			expect(useExecutionStore.getState().executionState.visitedLines).toEqual([1, 3, 5]);
+		});
+
+		it('clears visited lines', () => {
+			useExecutionStore.getState().addVisitedLine(1);
+			useExecutionStore.getState().addVisitedLine(3);
+			useExecutionStore.getState().clearVisitedLines();
+			expect(useExecutionStore.getState().executionState.visitedLines).toEqual([]);
+		});
+	});
+
+	describe('next line', () => {
+		it('starts with nextLine 0', () => {
+			expect(useExecutionStore.getState().executionState.nextLine).toBe(0);
+		});
+
+		it('sets the next line', () => {
+			useExecutionStore.getState().setNextLine(10);
+			expect(useExecutionStore.getState().executionState.nextLine).toBe(10);
+		});
+	});
+
+	describe('line annotations', () => {
+		it('starts with empty line annotations', () => {
+			expect(useExecutionStore.getState().executionState.lineAnnotations).toEqual({});
+		});
+
+		it('sets a line annotation linking a code line to a canvas element', () => {
+			useExecutionStore.getState().setLineAnnotation(5, 'element-abc');
+			expect(useExecutionStore.getState().executionState.lineAnnotations[5]).toBe('element-abc');
+		});
+
+		it('removes a line annotation', () => {
+			useExecutionStore.getState().setLineAnnotation(5, 'element-abc');
+			useExecutionStore.getState().removeLineAnnotation(5);
+			expect(useExecutionStore.getState().executionState.lineAnnotations[5]).toBeUndefined();
+		});
+
+		it('clears all line annotations', () => {
+			useExecutionStore.getState().setLineAnnotation(5, 'el-1');
+			useExecutionStore.getState().setLineAnnotation(10, 'el-2');
+			useExecutionStore.getState().clearLineAnnotations();
+			expect(useExecutionStore.getState().executionState.lineAnnotations).toEqual({});
+		});
+	});
+
 	describe('serialization', () => {
 		it('state contains no Map or Set', () => {
 			useExecutionStore.getState().setVariables({

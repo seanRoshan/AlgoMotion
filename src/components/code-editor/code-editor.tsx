@@ -14,6 +14,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { LineHighlightManager } from '@/lib/editor/line-highlight-manager';
 import { useExecutionStore } from '@/lib/stores/execution-store';
 
 type SupportedLanguage = 'javascript' | 'typescript' | 'python' | 'cpp' | 'java' | 'plaintext';
@@ -36,15 +37,6 @@ const BREAKPOINT_DECORATION: monaco.editor.IModelDeltaDecoration = {
 	},
 };
 
-const CURRENT_LINE_DECORATION: monaco.editor.IModelDeltaDecoration = {
-	range: { startLineNumber: 0, startColumn: 1, endLineNumber: 0, endColumn: 1 },
-	options: {
-		isWholeLine: true,
-		className: 'current-line-highlight',
-		glyphMarginClassName: 'current-line-glyph',
-	},
-};
-
 /**
  * Code Editor wrapper around Monaco Editor with lazy-loading.
  * Integrates with the execution store for breakpoints and line highlighting.
@@ -61,7 +53,7 @@ export function CodeEditor() {
 	const { resolvedTheme } = useTheme();
 	const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 	const breakpointDecorationsRef = useRef<string[]>([]);
-	const lineDecorationsRef = useRef<string[]>([]);
+	const highlightManagerRef = useRef(new LineHighlightManager());
 
 	const [language, setLanguage] = useState<SupportedLanguage>('javascript');
 	const [readOnly, setReadOnly] = useState(false);
@@ -69,6 +61,8 @@ export function CodeEditor() {
 	const sourceCode = useExecutionStore((s) => s.sourceCode);
 	const breakpoints = useExecutionStore((s) => s.breakpoints);
 	const currentLine = useExecutionStore((s) => s.executionState.currentLine);
+	const visitedLines = useExecutionStore((s) => s.executionState.visitedLines);
+	const nextLine = useExecutionStore((s) => s.executionState.nextLine);
 	const status = useExecutionStore((s) => s.executionState.status);
 	const toggleBreakpoint = useExecutionStore((s) => s.toggleBreakpoint);
 	const setSourceCode = useExecutionStore((s) => s.setSourceCode);
@@ -87,6 +81,7 @@ export function CodeEditor() {
 	const handleEditorMount = useCallback(
 		(editor: monaco.editor.IStandaloneCodeEditor, monacoInstance: typeof monaco) => {
 			editorRef.current = editor;
+			highlightManagerRef.current.setEditor(editor as never);
 
 			// Define custom themes
 			monacoInstance.editor.defineTheme('algomotion-dark', {
@@ -143,32 +138,15 @@ export function CodeEditor() {
 		);
 	}, [breakpoints]);
 
-	// Update current line highlight when execution state changes
+	// Update line highlights when execution state changes
 	useEffect(() => {
-		const editor = editorRef.current;
-		if (!editor) return;
-
-		const decorations: monaco.editor.IModelDeltaDecoration[] =
-			currentLine > 0 && status !== 'idle'
-				? [
-						{
-							...CURRENT_LINE_DECORATION,
-							range: {
-								startLineNumber: currentLine,
-								startColumn: 1,
-								endLineNumber: currentLine,
-								endColumn: 1,
-							},
-						},
-					]
-				: [];
-
-		lineDecorationsRef.current = editor.deltaDecorations(lineDecorationsRef.current, decorations);
-
-		if (currentLine > 0 && status !== 'idle') {
-			editor.revealLineInCenter(currentLine);
-		}
-	}, [currentLine, status]);
+		highlightManagerRef.current.update({
+			currentLine,
+			visitedLines,
+			nextLine,
+			status,
+		});
+	}, [currentLine, visitedLines, nextLine, status]);
 
 	return (
 		<div className="flex h-full flex-col">

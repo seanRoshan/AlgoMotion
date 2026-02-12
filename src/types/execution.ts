@@ -82,6 +82,10 @@ export interface StepEvent {
  */
 export interface ExecutionState {
 	currentLine: number;
+	/** Lines already executed, used for dimmed highlighting */
+	visitedLines: number[];
+	/** The line that will execute next (0 = unknown) */
+	nextLine: number;
 	callStack: StackFrame[];
 	variables: Record<string, VariableSnapshot>;
 	heap: Record<string, HeapObject>;
@@ -90,4 +94,6 @@ export interface ExecutionState {
 	stepCount: number;
 	/** Maps execution step → timeline position in seconds */
 	animationTime: number;
+	/** Maps code line numbers to canvas element IDs for annotations */
+	lineAnnotations: Record<number, string>;
 }
