@@ -1,5 +1,6 @@
 import type { ArrowShape, SceneElement } from '@/types';
 import { ArrayRenderer } from './array-renderer';
+import { GraphRenderer } from './graph-renderer';
 import { calculateArrowheadPoints, hexToPixiColor } from './shared';
 import { TreeRenderer } from './tree-renderer';
 
@@ -72,11 +73,13 @@ export class ElementRenderer {
 	private displayObjects: Record<string, PixiContainer> = {};
 	private arrayRenderer: ArrayRenderer;
 	private treeRenderer: TreeRenderer;
+	private graphRenderer: GraphRenderer;
 
 	constructor(pixi: PixiModule) {
 		this.pixi = pixi;
 		this.arrayRenderer = new ArrayRenderer(pixi as never);
 		this.treeRenderer = new TreeRenderer(pixi as never);
+		this.graphRenderer = new GraphRenderer(pixi as never);
 	}
 
 	/**
@@ -98,6 +101,20 @@ export class ElementRenderer {
 	 */
 	getTreeNodeContainers(elementId: string): Map<string, unknown> | undefined {
 		return this.treeRenderer.getNodeContainers(elementId);
+	}
+
+	/**
+	 * Get graph node containers for animation targeting.
+	 */
+	getGraphNodeContainers(elementId: string): Map<string, unknown> | undefined {
+		return this.graphRenderer.getNodeContainers(elementId);
+	}
+
+	/**
+	 * Get graph edge graphics for animation targeting.
+	 */
+	getGraphEdgeGraphics(elementId: string): Map<string, unknown> | undefined {
+		return this.graphRenderer.getEdgeGraphics(elementId);
 	}
 
 	/**
@@ -143,6 +160,11 @@ export class ElementRenderer {
 			case 'treeNode': {
 				const treeContainer = this.treeRenderer.render(element);
 				container.addChild(treeContainer);
+				break;
+			}
+			case 'graphNode': {
+				const graphContainer = this.graphRenderer.render(element);
+				container.addChild(graphContainer);
 				break;
 			}
 			default:
@@ -191,6 +213,11 @@ export class ElementRenderer {
 			case 'treeNode': {
 				const treeContainer = this.treeRenderer.render(element);
 				container.addChild(treeContainer);
+				break;
+			}
+			case 'graphNode': {
+				const graphContainer = this.graphRenderer.render(element);
+				container.addChild(graphContainer);
 				break;
 			}
 			default:
