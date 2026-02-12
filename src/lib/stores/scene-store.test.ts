@@ -114,6 +114,24 @@ describe('sceneStore', () => {
 			expect(state.connections['conn-1']).toBeUndefined();
 			expect(state.connectionIds).not.toContain('conn-1');
 		});
+
+		it('removes element with multiple connections', () => {
+			useSceneStore.getState().addElement(makeElement('el-1'));
+			useSceneStore.getState().addElement(makeElement('el-2'));
+			useSceneStore.getState().addElement(makeElement('el-3'));
+			useSceneStore.getState().addConnection(makeConnection('conn-1', 'el-1', 'el-2'));
+			useSceneStore.getState().addConnection(makeConnection('conn-2', 'el-1', 'el-3'));
+			useSceneStore.getState().addConnection(makeConnection('conn-3', 'el-2', 'el-1'));
+
+			useSceneStore.getState().removeElement('el-1');
+
+			const state = useSceneStore.getState();
+			expect(state.elements['el-1']).toBeUndefined();
+			expect(state.connections['conn-1']).toBeUndefined();
+			expect(state.connections['conn-2']).toBeUndefined();
+			expect(state.connections['conn-3']).toBeUndefined();
+			expect(state.connectionIds).toHaveLength(0);
+		});
 	});
 
 	describe('updateElement / moveElement', () => {
@@ -221,6 +239,22 @@ describe('sceneStore', () => {
 
 			const pasted = useSceneStore.getState().paste();
 			expect(pasted[0]?.position).toEqual({ x: 20, y: 20 });
+		});
+
+		it('pastes multiple elements without ID collision', () => {
+			const el1 = makeElement('el-1', { position: { x: 0, y: 0 } });
+			const el2 = makeElement('el-2', { position: { x: 50, y: 50 } });
+			useSceneStore.getState().addElement(el1);
+			useSceneStore.getState().addElement(el2);
+			useSceneStore.getState().selectMultiple(['el-1', 'el-2']);
+			useSceneStore.getState().copySelected();
+
+			const pasted = useSceneStore.getState().paste(20, 20);
+			expect(pasted).toHaveLength(2);
+
+			const state = useSceneStore.getState();
+			expect(state.elementIds).toHaveLength(4);
+			expect(new Set(state.elementIds).size).toBe(4);
 		});
 	});
 

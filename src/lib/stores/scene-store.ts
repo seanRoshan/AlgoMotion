@@ -61,13 +61,14 @@ export const useSceneStore = create<SceneStore>()(
 						state.elementIds = state.elementIds.filter((eid) => eid !== id);
 						state.selectedIds = state.selectedIds.filter((sid) => sid !== id);
 						// Remove connections referencing this element
-						for (const cid of state.connectionIds) {
+						state.connectionIds = state.connectionIds.filter((cid) => {
 							const conn = state.connections[cid];
 							if (conn && (conn.fromElementId === id || conn.toElementId === id)) {
 								delete state.connections[cid];
-								state.connectionIds = state.connectionIds.filter((c) => c !== cid);
+								return false;
 							}
-						}
+							return true;
+						});
 					}),
 
 				updateElement: (id, updates) =>
@@ -134,9 +135,12 @@ export const useSceneStore = create<SceneStore>()(
 				paste: (offsetX = 20, offsetY = 20) => {
 					const { clipboard } = get();
 					const pasted: SceneElement[] = [];
+					const baseTimestamp = Date.now();
 					set((state) => {
-						for (const el of clipboard) {
-							const newId = `${el.id}-copy-${Date.now()}`;
+						for (let i = 0; i < clipboard.length; i++) {
+							const el = clipboard[i];
+							if (!el) continue;
+							const newId = `${el.id}-copy-${baseTimestamp}-${i}`;
 							const newEl: SceneElement = {
 								...el,
 								id: newId,
