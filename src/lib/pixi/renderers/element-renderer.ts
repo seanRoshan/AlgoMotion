@@ -1,6 +1,7 @@
 import type { ArrowShape, SceneElement } from '@/types';
 import { ArrayRenderer } from './array-renderer';
 import { calculateArrowheadPoints, hexToPixiColor } from './shared';
+import { TreeRenderer } from './tree-renderer';
 
 /**
  * Minimal Pixi.js type interfaces for dependency injection.
@@ -70,10 +71,12 @@ export class ElementRenderer {
 	private pixi: PixiModule;
 	private displayObjects: Record<string, PixiContainer> = {};
 	private arrayRenderer: ArrayRenderer;
+	private treeRenderer: TreeRenderer;
 
 	constructor(pixi: PixiModule) {
 		this.pixi = pixi;
 		this.arrayRenderer = new ArrayRenderer(pixi as never);
+		this.treeRenderer = new TreeRenderer(pixi as never);
 	}
 
 	/**
@@ -88,6 +91,13 @@ export class ElementRenderer {
 	 */
 	getArrayCellContainers(elementId: string): unknown[] | undefined {
 		return this.arrayRenderer.getCellContainers(elementId);
+	}
+
+	/**
+	 * Get tree node containers for animation targeting.
+	 */
+	getTreeNodeContainers(elementId: string): Map<string, unknown> | undefined {
+		return this.treeRenderer.getNodeContainers(elementId);
 	}
 
 	/**
@@ -128,6 +138,11 @@ export class ElementRenderer {
 			case 'arrayCell': {
 				const arrayContainer = this.arrayRenderer.render(element);
 				container.addChild(arrayContainer);
+				break;
+			}
+			case 'treeNode': {
+				const treeContainer = this.treeRenderer.render(element);
+				container.addChild(treeContainer);
 				break;
 			}
 			default:
@@ -171,6 +186,11 @@ export class ElementRenderer {
 			case 'arrayCell': {
 				const arrayContainer = this.arrayRenderer.render(element);
 				container.addChild(arrayContainer);
+				break;
+			}
+			case 'treeNode': {
+				const treeContainer = this.treeRenderer.render(element);
+				container.addChild(treeContainer);
 				break;
 			}
 			default:
