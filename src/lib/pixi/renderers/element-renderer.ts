@@ -1,6 +1,7 @@
 import type { ArrowShape, SceneElement } from '@/types';
 import { ArrayRenderer } from './array-renderer';
 import { GraphRenderer } from './graph-renderer';
+import { LinkedListRenderer } from './linked-list-renderer';
 import { calculateArrowheadPoints, hexToPixiColor } from './shared';
 import { TreeRenderer } from './tree-renderer';
 
@@ -74,12 +75,14 @@ export class ElementRenderer {
 	private arrayRenderer: ArrayRenderer;
 	private treeRenderer: TreeRenderer;
 	private graphRenderer: GraphRenderer;
+	private linkedListRenderer: LinkedListRenderer;
 
 	constructor(pixi: PixiModule) {
 		this.pixi = pixi;
 		this.arrayRenderer = new ArrayRenderer(pixi as never);
 		this.treeRenderer = new TreeRenderer(pixi as never);
 		this.graphRenderer = new GraphRenderer(pixi as never);
+		this.linkedListRenderer = new LinkedListRenderer(pixi as never);
 	}
 
 	/**
@@ -115,6 +118,13 @@ export class ElementRenderer {
 	 */
 	getGraphEdgeGraphics(elementId: string): Map<string, unknown> | undefined {
 		return this.graphRenderer.getEdgeGraphics(elementId);
+	}
+
+	/**
+	 * Get linked list node containers for animation targeting.
+	 */
+	getLinkedListNodeContainers(elementId: string): Map<string, unknown> | undefined {
+		return this.linkedListRenderer.getNodeContainers(elementId);
 	}
 
 	/**
@@ -165,6 +175,11 @@ export class ElementRenderer {
 			case 'graphNode': {
 				const graphContainer = this.graphRenderer.render(element);
 				container.addChild(graphContainer);
+				break;
+			}
+			case 'linkedListNode': {
+				const llContainer = this.linkedListRenderer.render(element);
+				container.addChild(llContainer);
 				break;
 			}
 			default:
@@ -218,6 +233,11 @@ export class ElementRenderer {
 			case 'graphNode': {
 				const graphContainer = this.graphRenderer.render(element);
 				container.addChild(graphContainer);
+				break;
+			}
+			case 'linkedListNode': {
+				const llContainer = this.linkedListRenderer.render(element);
+				container.addChild(llContainer);
 				break;
 			}
 			default:
