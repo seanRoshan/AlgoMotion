@@ -8,17 +8,19 @@ import { BottomPanel } from '@/components/panels/bottom-panel';
 import { LeftPanel } from '@/components/panels/left-panel';
 import { RightPanel } from '@/components/panels/right-panel';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { useGlobalShortcuts } from '@/hooks/use-global-shortcuts';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { Toolbar } from './toolbar';
 
 export function EditorLayout() {
+	useGlobalShortcuts();
+
 	const leftRef = usePanelRef();
 	const rightRef = usePanelRef();
 	const bottomRef = usePanelRef();
 
 	const panelSizes = useUIStore((s) => s.panelSizes);
 	const panels = useUIStore((s) => s.panels);
-	const togglePanel = useUIStore((s) => s.togglePanel);
 	const setPanelSize = useUIStore((s) => s.setPanelSize);
 	const setPanelVisible = useUIStore((s) => s.setPanelVisible);
 
@@ -43,34 +45,6 @@ export function EditorLayout() {
 		if (panels.bottom && panel.isCollapsed()) panel.expand();
 		else if (!panels.bottom && !panel.isCollapsed()) panel.collapse();
 	}, [panels.bottom, bottomRef]);
-
-	// Keyboard shortcuts for panel toggle
-	useEffect(() => {
-		function handleKeyDown(e: KeyboardEvent) {
-			const isMod = e.metaKey || e.ctrlKey;
-			if (!isMod) return;
-
-			switch (e.key) {
-				case 'b':
-				case 'B':
-					e.preventDefault();
-					togglePanel('left');
-					break;
-				case 'i':
-				case 'I':
-					e.preventDefault();
-					togglePanel('right');
-					break;
-				case '`':
-					e.preventDefault();
-					togglePanel('bottom');
-					break;
-			}
-		}
-
-		document.addEventListener('keydown', handleKeyDown);
-		return () => document.removeEventListener('keydown', handleKeyDown);
-	}, [togglePanel]);
 
 	// Track resize and sync collapsed state back to store
 	const handleLeftResize = useCallback(
