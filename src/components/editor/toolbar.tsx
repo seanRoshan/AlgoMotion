@@ -34,6 +34,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { saveProject } from '@/hooks/use-auto-save';
+import { createElement } from '@/lib/element-library/create-element';
 import { useExportStore } from '@/lib/stores/export-store';
 import { canRedo, canUndo, useHistoryStore } from '@/lib/stores/history-store';
 import { useProjectStore } from '@/lib/stores/project-store';
@@ -140,6 +141,18 @@ function handleStepForward() {
 	seek(Math.min(playback.currentTime + STEP_INCREMENT, duration));
 }
 
+let insertOffset = 0;
+
+function handleInsert(type: 'rect' | 'ellipse' | 'text' | 'arrow') {
+	const { camera } = useSceneStore.getState();
+	// Place at viewport center with cascading offset
+	const centerX = -camera.x + 400 / camera.zoom + insertOffset;
+	const centerY = -camera.y + 300 / camera.zoom + insertOffset;
+	insertOffset = (insertOffset + 20) % 200;
+	const element = createElement(type, centerX, centerY);
+	useSceneStore.getState().addElement(element);
+}
+
 export function Toolbar() {
 	const undoDisabled = useHistoryStore((s) => !canUndo(s));
 	const redoDisabled = useHistoryStore((s) => !canRedo(s));
@@ -221,12 +234,12 @@ export function Toolbar() {
 					<MenubarMenu>
 						<MenubarTrigger className="h-7 px-2 text-xs">Insert</MenubarTrigger>
 						<MenubarContent>
-							<MenubarItem>Rectangle</MenubarItem>
-							<MenubarItem>Ellipse</MenubarItem>
-							<MenubarItem>Text</MenubarItem>
-							<MenubarItem>Arrow</MenubarItem>
+							<MenubarItem onSelect={() => handleInsert('rect')}>Rectangle</MenubarItem>
+							<MenubarItem onSelect={() => handleInsert('ellipse')}>Ellipse</MenubarItem>
+							<MenubarItem onSelect={() => handleInsert('text')}>Text</MenubarItem>
+							<MenubarItem onSelect={() => handleInsert('arrow')}>Arrow</MenubarItem>
 							<MenubarSeparator />
-							<MenubarItem>Data Structure...</MenubarItem>
+							<MenubarItem disabled>Data Structure...</MenubarItem>
 						</MenubarContent>
 					</MenubarMenu>
 				</Menubar>
