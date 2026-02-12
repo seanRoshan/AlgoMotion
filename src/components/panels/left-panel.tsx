@@ -1,9 +1,10 @@
 'use client';
 
-import { Blocks, Layers, LayoutTemplate } from 'lucide-react';
+import { Layers, LayoutTemplate } from 'lucide-react';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ElementLibrary } from './element-library';
 
 export function LeftPanel() {
 	return (
@@ -20,12 +21,8 @@ export function LeftPanel() {
 				</TabsTrigger>
 			</TabsList>
 			<ScrollArea className="flex-1">
-				<TabsContent value="elements" className="mt-0">
-					<EmptyState
-						icon={Blocks}
-						title="No elements yet"
-						description="Drag elements from here onto the canvas"
-					/>
+				<TabsContent value="elements" className="mt-0 h-full">
+					<ElementLibrary />
 				</TabsContent>
 				<TabsContent value="templates" className="mt-0">
 					<EmptyState
