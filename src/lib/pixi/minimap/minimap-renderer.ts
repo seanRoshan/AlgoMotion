@@ -42,7 +42,12 @@ export class MinimapRenderer {
 		this.viewportGfx = viewport;
 	}
 
-	computeWorldBounds(elements: Record<string, SceneElement>, elementIds: string[]): MinimapBounds {
+	computeWorldBounds(
+		elements: Record<string, SceneElement>,
+		elementIds: string[],
+		minimapWidth: number = MINIMAP_DEFAULTS.width,
+		minimapHeight: number = MINIMAP_DEFAULTS.height,
+	): MinimapBounds {
 		let minX = Number.POSITIVE_INFINITY;
 		let minY = Number.POSITIVE_INFINITY;
 		let maxX = Number.NEGATIVE_INFINITY;
@@ -50,7 +55,7 @@ export class MinimapRenderer {
 
 		for (const id of elementIds) {
 			const el = elements[id];
-			if (!el) continue;
+			if (!el || !el.visible) continue;
 			minX = Math.min(minX, el.position.x);
 			minY = Math.min(minY, el.position.y);
 			maxX = Math.max(maxX, el.position.x + el.size.width);
@@ -77,15 +82,15 @@ export class MinimapRenderer {
 			height: contentHeight + 2 * padY,
 		};
 
-		const scaleX = MINIMAP_DEFAULTS.width / worldBounds.width;
-		const scaleY = MINIMAP_DEFAULTS.height / worldBounds.height;
+		const scaleX = minimapWidth / worldBounds.width;
+		const scaleY = minimapHeight / worldBounds.height;
 		const scale = Math.min(scaleX, scaleY);
 
 		// Center content in minimap
 		const renderedWidth = worldBounds.width * scale;
 		const renderedHeight = worldBounds.height * scale;
-		const offsetX = (MINIMAP_DEFAULTS.width - renderedWidth) / 2;
-		const offsetY = (MINIMAP_DEFAULTS.height - renderedHeight) / 2;
+		const offsetX = (minimapWidth - renderedWidth) / 2;
+		const offsetY = (minimapHeight - renderedHeight) / 2;
 
 		this._bounds = { worldBounds, scale, offsetX, offsetY };
 		return this._bounds;
@@ -113,7 +118,7 @@ export class MinimapRenderer {
 		this._screenBounds = { x: posX, y: posY, width: minimapWidth, height: minimapHeight };
 
 		// Compute bounds from elements
-		this.computeWorldBounds(elements, elementIds);
+		this.computeWorldBounds(elements, elementIds, minimapWidth, minimapHeight);
 
 		// Draw background
 		this.backgroundGfx.clear();
