@@ -64,6 +64,7 @@
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"@vitejs/plugin-react": "latest",
+		"@vitest/coverage-v8": "^4.0.18",
 		"babel-plugin-react-compiler": "latest",
 		"fake-indexeddb": "^6.2.5",
 		"jsdom": "latest",
