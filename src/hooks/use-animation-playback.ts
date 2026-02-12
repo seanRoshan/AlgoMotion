@@ -28,9 +28,6 @@ export function useAnimationPlayback(managerRef: React.RefObject<SceneManager | 
 		const manager = managerRef.current;
 		if (!manager?.initialized) return null;
 
-		const renderer = manager.getElementRenderer();
-		if (!renderer) return null;
-
 		const { elements, elementIds } = useSceneStore.getState();
 		if (elementIds.length === 0) return null;
 
@@ -40,7 +37,7 @@ export function useAnimationPlayback(managerRef: React.RefObject<SceneManager | 
 		const templateId = orderedElements[0]?.type === 'arrayCell' ? 'bubble-sort' : 'generic';
 
 		const getDisplayObject = (id: string) => {
-			const obj = renderer.getDisplayObject(id);
+			const obj = manager.getDisplayObject(id);
 			if (!obj) return null;
 			// Return the real Pixi Container — GSAP will animate its x/y/alpha directly
 			return obj as unknown as { x: number; y: number; alpha: number };
@@ -76,13 +73,21 @@ export function useAnimationPlayback(managerRef: React.RefObject<SceneManager | 
 	// React to playback state changes
 	useEffect(() => {
 		const unsub = useTimelineStore.subscribe((state, prev) => {
-			const { status, speed } = state.playback;
+			const { status, speed, currentTime } = state.playback;
 			const prevStatus = prev.playback.status;
 
-			if (status === prevStatus && speed === prev.playback.speed) {
-				// Only speed changed
+			if (status === prevStatus) {
+				// Status unchanged — check for speed or currentTime changes
 				if (speed !== prev.playback.speed && timelineRef.current) {
 					timelineRef.current.timeScale(speed);
+				}
+				// External seek (step buttons, scrubber drag) while not playing
+				if (
+					currentTime !== prev.playback.currentTime &&
+					status !== 'playing' &&
+					timelineRef.current
+				) {
+					timelineRef.current.seek(currentTime);
 				}
 				return;
 			}

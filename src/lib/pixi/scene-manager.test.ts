@@ -156,6 +156,13 @@ describe('SceneManager', () => {
 		});
 	});
 
+	describe('getDisplayObject (before init)', () => {
+		it('returns null when elementRenderer is not initialized', () => {
+			const manager = new SceneManager();
+			expect(manager.getDisplayObject('any-id')).toBeNull();
+		});
+	});
+
 	describe('destroy (before init)', () => {
 		it('can be called safely without init', () => {
 			const manager = new SceneManager();
