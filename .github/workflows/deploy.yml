@@ -84,7 +84,8 @@ jobs:
         run: echo "url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})" >> "$GITHUB_OUTPUT"
 
       - name: Upload Sentry source maps
-        if: success()
+        if: success() && env.SENTRY_AUTH_TOKEN != ''
+        continue-on-error: true
         run: npx @sentry/cli releases files "$COMMIT_SHA" upload-sourcemaps .next/
         env:
           COMMIT_SHA: ${{ github.sha }}
