@@ -36,6 +36,7 @@ import { canRedo, canUndo, useHistoryStore } from '@/lib/stores/history-store';
 import { useSceneStore } from '@/lib/stores/scene-store';
 import { useTimelineStore } from '@/lib/stores/timeline-store';
 import type { PlaybackSpeed } from '@/types';
+import { ThemeToggle } from './theme-toggle';
 import { ToolSelector } from './tool-selector';
 
 function ToolbarButton({
@@ -219,6 +220,10 @@ export function Toolbar() {
 						))}
 					</DropdownMenuContent>
 				</DropdownMenu>
+
+				<Separator orientation="vertical" className="mx-1 h-5" />
+
+				<ThemeToggle />
 			</div>
 		</div>
 	);
