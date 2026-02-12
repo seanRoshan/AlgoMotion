@@ -13,7 +13,7 @@ test.describe('Keyboard Shortcuts', () => {
 		await page.goto('/editor/demo');
 		await page.waitForLoadState('networkidle');
 		// Click on the canvas area to ensure focus is not on a text input
-		await page.locator('canvas').click();
+		await page.locator('canvas').first().click();
 	});
 
 	test('Space toggles play/pause', async ({ page }) => {

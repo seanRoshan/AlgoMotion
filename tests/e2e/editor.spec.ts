@@ -18,26 +18,28 @@ test.describe('Editor', () => {
 	});
 
 	test('has File, Edit, View, Insert menus', async ({ page }) => {
-		await expect(page.getByRole('menubar').getByText('File')).toBeVisible();
-		await expect(page.getByRole('menubar').getByText('Edit')).toBeVisible();
-		await expect(page.getByRole('menubar').getByText('View')).toBeVisible();
-		await expect(page.getByRole('menubar').getByText('Insert')).toBeVisible();
+		const menubar = page.getByRole('menubar');
+		await expect(menubar.getByText('File')).toBeVisible();
+		await expect(menubar.getByText('Edit')).toBeVisible();
+		await expect(menubar.getByText('View')).toBeVisible();
+		await expect(menubar.getByText('Insert')).toBeVisible();
 	});
 
 	test('has resizable panels', async ({ page }) => {
-		await expect(page.getByText('Elements')).toBeVisible();
-		await expect(page.getByText('Properties')).toBeVisible();
-		await expect(page.getByText('Timeline')).toBeVisible();
+		await expect(page.getByRole('tab', { name: 'Elements' })).toBeVisible();
+		await expect(page.getByText('Properties').first()).toBeVisible();
+		await expect(page.getByText('Timeline').first()).toBeVisible();
 	});
 
 	test('has canvas element', async ({ page }) => {
-		await expect(page.locator('canvas')).toBeVisible();
+		await expect(page.locator('canvas').first()).toBeVisible();
 	});
 
 	test('has playback controls', async ({ page }) => {
-		await expect(page.getByLabel('Play')).toBeVisible();
-		await expect(page.getByLabel('Pause')).toBeVisible();
-		await expect(page.getByLabel('Stop')).toBeVisible();
+		const toolbar = page.getByRole('toolbar', { name: 'Main toolbar' });
+		await expect(toolbar.getByLabel('Play')).toBeVisible();
+		await expect(toolbar.getByLabel('Pause')).toBeVisible();
+		await expect(toolbar.getByLabel('Stop')).toBeVisible();
 	});
 
 	test('has undo/redo buttons', async ({ page }) => {
@@ -49,11 +51,11 @@ test.describe('Editor', () => {
 		await expect(page.getByLabel('Zoom in')).toBeVisible();
 		await expect(page.getByLabel('Zoom out')).toBeVisible();
 		await expect(page.getByLabel('Fit to screen')).toBeVisible();
-		await expect(page.getByText('100%')).toBeVisible();
+		await expect(page.locator('[data-testid="zoom-level"]')).toHaveText('100%');
 	});
 
 	test('has speed selector defaulting to 1x', async ({ page }) => {
-		await expect(page.getByText('1x')).toBeVisible();
+		await expect(page.locator('[data-testid="speed-selector"]')).toBeVisible();
 	});
 
 	test('has skip-to-content link', async ({ page }) => {

@@ -43,7 +43,7 @@ test.describe('Templates', () => {
 
 		await page.getByRole('tab', { name: 'Templates' }).click();
 		// Template gallery should be rendered in the panel
-		const tabContent = page.locator('[data-state="active"][role="tabpanel"]');
+		const tabContent = page.locator('[data-state="active"][role="tabpanel"]').first();
 		await expect(tabContent).toBeVisible();
 	});
 });

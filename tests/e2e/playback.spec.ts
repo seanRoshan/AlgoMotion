@@ -14,30 +14,35 @@ test.describe('Playback Controls', () => {
 	});
 
 	test('play button is clickable', async ({ page }) => {
-		const playButton = page.getByLabel('Play');
+		const toolbar = page.getByRole('toolbar', { name: 'Main toolbar' });
+		const playButton = toolbar.getByLabel('Play');
 		await expect(playButton).toBeVisible();
 		await expect(playButton).toBeEnabled();
 		await playButton.click();
 	});
 
 	test('pause button is clickable', async ({ page }) => {
-		const pauseButton = page.getByLabel('Pause');
+		const toolbar = page.getByRole('toolbar', { name: 'Main toolbar' });
+		const pauseButton = toolbar.getByLabel('Pause');
 		await expect(pauseButton).toBeVisible();
 		await pauseButton.click();
 	});
 
 	test('stop button is clickable', async ({ page }) => {
-		const stopButton = page.getByLabel('Stop');
+		const toolbar = page.getByRole('toolbar', { name: 'Main toolbar' });
+		const stopButton = toolbar.getByLabel('Stop');
 		await expect(stopButton).toBeVisible();
 		await stopButton.click();
 	});
 
 	test('step forward button exists', async ({ page }) => {
-		await expect(page.getByLabel('Step forward')).toBeVisible();
+		const toolbar = page.getByRole('toolbar', { name: 'Main toolbar' });
+		await expect(toolbar.getByLabel('Step forward')).toBeVisible();
 	});
 
 	test('step back button exists', async ({ page }) => {
-		await expect(page.getByLabel('Step back')).toBeVisible();
+		const toolbar = page.getByRole('toolbar', { name: 'Main toolbar' });
+		await expect(toolbar.getByLabel('Step back')).toBeVisible();
 	});
 
 	test('speed selector opens dropdown with options', async ({ page }) => {

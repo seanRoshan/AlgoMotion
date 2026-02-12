@@ -40,7 +40,7 @@ test.describe('Element Library', () => {
 		const searchInput = page.getByPlaceholder('Search elements...');
 		await searchInput.fill('rect');
 		// Should show matching elements
-		await expect(page.getByText('Rectangle')).toBeVisible();
+		await expect(page.getByText('Rectangle').first()).toBeVisible();
 	});
 
 	test('search with no results shows empty message', async ({ page }) => {

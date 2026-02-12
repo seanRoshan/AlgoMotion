@@ -14,9 +14,9 @@ test.describe('scaffold', () => {
 
 	test('editor page has resizable panels', async ({ page }) => {
 		await page.goto('/editor/demo');
-		await expect(page.getByText('Elements')).toBeVisible();
-		await expect(page.getByText('Properties')).toBeVisible();
-		await expect(page.getByText('Timeline')).toBeVisible();
+		await expect(page.getByRole('tab', { name: 'Elements' })).toBeVisible();
+		await expect(page.getByText('Properties').first()).toBeVisible();
+		await expect(page.getByText('Timeline').first()).toBeVisible();
 	});
 
 	test('dashboard page renders', async ({ page }) => {

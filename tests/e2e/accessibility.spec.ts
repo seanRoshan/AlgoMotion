@@ -53,7 +53,7 @@ test.describe('Accessibility', () => {
 		const politeRegion = page.locator('output[aria-live="polite"]');
 		await expect(politeRegion).toBeAttached();
 
-		const assertiveRegion = page.locator('[role="alert"][aria-live="assertive"]');
+		const assertiveRegion = page.locator('[role="alert"][aria-live="assertive"]').first();
 		await expect(assertiveRegion).toBeAttached();
 	});
 

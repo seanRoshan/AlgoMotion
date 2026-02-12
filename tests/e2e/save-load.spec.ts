@@ -16,7 +16,7 @@ test.describe('Save and Load', () => {
 		await page.waitForLoadState('networkidle');
 
 		// Wait for hydration and async Pixi.js init to complete
-		await expect(page.locator('canvas')).toBeVisible();
+		await expect(page.locator('canvas').first()).toBeVisible();
 
 		// No uncaught errors should occur during load
 		expect(errors).toHaveLength(0);
@@ -27,7 +27,7 @@ test.describe('Save and Load', () => {
 		await page.waitForLoadState('networkidle');
 
 		// Click canvas to ensure focus
-		await page.locator('canvas').click();
+		await page.locator('canvas').first().click();
 
 		// Ctrl+S should be intercepted by the app (no browser save dialog)
 		let dialogAppeared = false;
@@ -72,6 +72,6 @@ test.describe('Save and Load', () => {
 
 		// Editor should still render
 		await expect(page.getByRole('toolbar', { name: 'Main toolbar' })).toBeVisible();
-		await expect(page.locator('canvas')).toBeVisible();
+		await expect(page.locator('canvas').first()).toBeVisible();
 	});
 });

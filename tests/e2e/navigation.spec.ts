@@ -29,7 +29,7 @@ test.describe('Navigation', () => {
 
 	test('templates page renders', async ({ page }) => {
 		await page.goto('/templates');
-		await expect(page.getByText('Templates')).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible();
 	});
 
 	test('login page renders with sign in form', async ({ page }) => {
