@@ -7,10 +7,13 @@ import { PixiCanvas } from '@/components/canvas/pixi-canvas';
 import { BottomPanel } from '@/components/panels/bottom-panel';
 import { LeftPanel } from '@/components/panels/left-panel';
 import { RightPanel } from '@/components/panels/right-panel';
+import { MobileViewportWarning } from '@/components/ui/mobile-viewport-warning';
+import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useAutoSave } from '@/hooks/use-auto-save';
 import { useGlobalShortcuts } from '@/hooks/use-global-shortcuts';
 import { usePlaybackAnnouncer } from '@/hooks/use-playback-announcer';
+import { useServiceWorker } from '@/hooks/use-service-worker';
 import { useThemeSync } from '@/hooks/use-theme-sync';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { CommandPalette } from './command-palette';
@@ -21,6 +24,7 @@ export function EditorLayout() {
 	useAutoSave();
 	useThemeSync();
 	usePlaybackAnnouncer();
+	useServiceWorker();
 
 	const leftRef = usePanelRef();
 	const rightRef = usePanelRef();
@@ -84,8 +88,10 @@ export function EditorLayout() {
 
 	return (
 		<main id="main-content" className="flex h-screen flex-col overflow-hidden">
+			<OfflineIndicator />
 			<Toolbar />
 			<CommandPalette />
+			<MobileViewportWarning />
 			<ResizablePanelGroup orientation="horizontal" className="flex-1">
 				<ResizablePanel
 					id="left-panel"
