@@ -1,11 +1,17 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { ExecutionState, ExecutionStatus, StackFrame, VariableSnapshot } from '@/types';
+import type {
+	Breakpoint,
+	ExecutionState,
+	ExecutionStatus,
+	StackFrame,
+	VariableSnapshot,
+} from '@/types';
 
 export interface ExecutionStoreState {
 	executionState: ExecutionState;
-	breakpoints: number[];
+	breakpoints: Record<string, Breakpoint>;
 	sourceCode: string;
 }
 
@@ -23,9 +29,15 @@ export interface ExecutionActions {
 	clearOutput: () => void;
 	incrementStep: () => void;
 	setAnimationTime: (time: number) => void;
-	setBreakpoint: (line: number) => void;
+	addBreakpoint: (line: number) => void;
 	removeBreakpoint: (line: number) => void;
 	toggleBreakpoint: (line: number) => void;
+	enableBreakpoint: (line: number) => void;
+	disableBreakpoint: (line: number) => void;
+	setBreakpointCondition: (line: number, condition: string | undefined) => void;
+	incrementBreakpointHitCount: (line: number) => void;
+	clearAllBreakpoints: () => void;
+	getBreakpointLines: () => number[];
 	setSourceCode: (code: string) => void;
 	setLineAnnotation: (line: number, elementId: string) => void;
 	removeLineAnnotation: (line: number) => void;
@@ -34,6 +46,10 @@ export interface ExecutionActions {
 }
 
 export type ExecutionStore = ExecutionStoreState & ExecutionActions;
+
+function breakpointId(line: number): string {
+	return `line:${line}`;
+}
 
 const initialExecutionState: ExecutionState = {
 	currentLine: 0,
@@ -51,13 +67,13 @@ const initialExecutionState: ExecutionState = {
 
 const initialState: ExecutionStoreState = {
 	executionState: { ...initialExecutionState },
-	breakpoints: [],
+	breakpoints: {},
 	sourceCode: '',
 };
 
 export const useExecutionStore = create<ExecutionStore>()(
 	devtools(
-		immer((set) => ({
+		immer((set, get) => ({
 			...initialState,
 
 			setStatus: (status) =>
@@ -127,27 +143,74 @@ export const useExecutionStore = create<ExecutionStore>()(
 					state.executionState.animationTime = time;
 				}),
 
-			setBreakpoint: (line) =>
+			addBreakpoint: (line) =>
 				set((state) => {
-					if (!state.breakpoints.includes(line)) {
-						state.breakpoints.push(line);
+					const id = breakpointId(line);
+					if (!state.breakpoints[id]) {
+						state.breakpoints[id] = {
+							id,
+							line,
+							enabled: true,
+							hitCount: 0,
+						};
 					}
 				}),
 
 			removeBreakpoint: (line) =>
 				set((state) => {
-					state.breakpoints = state.breakpoints.filter((bp) => bp !== line);
+					delete state.breakpoints[breakpointId(line)];
 				}),
 
 			toggleBreakpoint: (line) =>
 				set((state) => {
-					const idx = state.breakpoints.indexOf(line);
-					if (idx >= 0) {
-						state.breakpoints.splice(idx, 1);
+					const id = breakpointId(line);
+					if (state.breakpoints[id]) {
+						delete state.breakpoints[id];
 					} else {
-						state.breakpoints.push(line);
+						state.breakpoints[id] = {
+							id,
+							line,
+							enabled: true,
+							hitCount: 0,
+						};
 					}
 				}),
+
+			enableBreakpoint: (line) =>
+				set((state) => {
+					const bp = state.breakpoints[breakpointId(line)];
+					if (bp) bp.enabled = true;
+				}),
+
+			disableBreakpoint: (line) =>
+				set((state) => {
+					const bp = state.breakpoints[breakpointId(line)];
+					if (bp) bp.enabled = false;
+				}),
+
+			setBreakpointCondition: (line, condition) =>
+				set((state) => {
+					const bp = state.breakpoints[breakpointId(line)];
+					if (bp) bp.condition = condition;
+				}),
+
+			incrementBreakpointHitCount: (line) =>
+				set((state) => {
+					const bp = state.breakpoints[breakpointId(line)];
+					if (bp) bp.hitCount += 1;
+				}),
+
+			clearAllBreakpoints: () =>
+				set((state) => {
+					state.breakpoints = {};
+				}),
+
+			getBreakpointLines: () => {
+				const bps = get().breakpoints;
+				return Object.values(bps)
+					.filter((bp) => bp.enabled)
+					.map((bp) => bp.line);
+			},
 
 			setSourceCode: (code) =>
 				set((state) => {

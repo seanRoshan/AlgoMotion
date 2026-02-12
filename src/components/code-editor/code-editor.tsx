@@ -122,15 +122,25 @@ export function CodeEditor() {
 		const editor = editorRef.current;
 		if (!editor) return;
 
-		const decorations: monaco.editor.IModelDeltaDecoration[] = breakpoints.map((line) => ({
-			...BREAKPOINT_DECORATION,
-			range: {
-				startLineNumber: line,
-				startColumn: 1,
-				endLineNumber: line,
-				endColumn: 1,
-			},
-		}));
+		const decorations: monaco.editor.IModelDeltaDecoration[] = Object.values(breakpoints).map(
+			(bp) => ({
+				...BREAKPOINT_DECORATION,
+				range: {
+					startLineNumber: bp.line,
+					startColumn: 1,
+					endLineNumber: bp.line,
+					endColumn: 1,
+				},
+				options: {
+					...BREAKPOINT_DECORATION.options,
+					glyphMarginClassName: bp.enabled
+						? bp.condition
+							? 'breakpoint-conditional-glyph'
+							: 'breakpoint-glyph'
+						: 'breakpoint-disabled-glyph',
+				},
+			}),
+		);
 
 		breakpointDecorationsRef.current = editor.deltaDecorations(
 			breakpointDecorationsRef.current,

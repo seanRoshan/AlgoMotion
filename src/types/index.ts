@@ -40,6 +40,7 @@ export {
 } from './elements';
 // ── Execution ──
 export type {
+	Breakpoint,
 	ExecutionState,
 	ExecutionStatus,
 	HeapObject,

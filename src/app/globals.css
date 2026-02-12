@@ -155,6 +155,27 @@
 	margin-top: 5px;
 }
 
+/* Monaco Editor — disabled breakpoint glyph (gray dot) */
+.breakpoint-disabled-glyph {
+	background: #6b7280;
+	border-radius: 50%;
+	width: 10px !important;
+	height: 10px !important;
+	margin-left: 4px;
+	margin-top: 5px;
+	opacity: 0.5;
+}
+
+/* Monaco Editor — conditional breakpoint glyph (amber diamond) */
+.breakpoint-conditional-glyph {
+	background: #f59e0b;
+	clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+	width: 10px !important;
+	height: 10px !important;
+	margin-left: 4px;
+	margin-top: 5px;
+}
+
 /* Monaco Editor — current execution line highlight */
 .current-line-highlight {
 	background: rgba(59, 130, 246, 0.15);
