@@ -183,6 +183,26 @@ describe('timelineStore', () => {
 			useTimelineStore.getState().play();
 			expect(useTimelineStore.getState().playback.status).toBe('playing');
 		});
+
+		it('seek updates currentTime while paused', () => {
+			useTimelineStore.getState().setDuration(10);
+			useTimelineStore.getState().play();
+			useTimelineStore.getState().pause();
+			expect(useTimelineStore.getState().playback.status).toBe('paused');
+
+			useTimelineStore.getState().seek(3);
+			expect(useTimelineStore.getState().playback.currentTime).toBe(3);
+			expect(useTimelineStore.getState().playback.status).toBe('paused');
+		});
+
+		it('seek updates currentTime while completed', () => {
+			useTimelineStore.getState().setDuration(10);
+			useTimelineStore.getState().setStatus('completed');
+
+			useTimelineStore.getState().seek(5);
+			expect(useTimelineStore.getState().playback.currentTime).toBe(5);
+			expect(useTimelineStore.getState().playback.status).toBe('completed');
+		});
 	});
 
 	describe('serialization', () => {

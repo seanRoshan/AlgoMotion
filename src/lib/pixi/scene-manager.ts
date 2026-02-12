@@ -255,6 +255,14 @@ export class SceneManager {
 	}
 
 	/**
+	 * Get a display object by element ID.
+	 * Used by the animation playback bridge to let GSAP directly mutate Pixi objects.
+	 */
+	getDisplayObject(id: string): unknown {
+		return this.elementRenderer?.getDisplayObject(id) ?? null;
+	}
+
+	/**
 	 * Sync all elements from Zustand store to Pixi.js scene graph.
 	 * Performs a diff: adds new, updates existing, removes stale.
 	 */

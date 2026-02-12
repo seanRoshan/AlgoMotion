@@ -96,4 +96,20 @@ describe('PlaybackControls', () => {
 		render(<PlaybackControls />);
 		expect(screen.getByText('0:00')).toBeDefined();
 	});
+
+	it('calls seek when step forward is clicked', async () => {
+		const user = userEvent.setup();
+		render(<PlaybackControls />);
+		await user.click(screen.getByLabelText('Step forward'));
+		// Should call seek with currentTime (0) + STEP_SIZE (0.1)
+		expect(mockSeek).toHaveBeenCalledWith(0.1);
+	});
+
+	it('calls seek when step backward is clicked', async () => {
+		const user = userEvent.setup();
+		render(<PlaybackControls />);
+		await user.click(screen.getByLabelText('Step backward'));
+		// Should call seek with max(0, currentTime - STEP_SIZE) = 0
+		expect(mockSeek).toHaveBeenCalledWith(0);
+	});
 });
