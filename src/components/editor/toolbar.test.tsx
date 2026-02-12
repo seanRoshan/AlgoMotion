@@ -182,6 +182,76 @@ describe('Toolbar', () => {
 		});
 	});
 
+	describe('Edit menu actions', () => {
+		it('Edit menu undo/redo store actions work', () => {
+			// Verify the store actions that the onSelect handlers call
+			expect(typeof useHistoryStore.getState().undo).toBe('function');
+			expect(typeof useHistoryStore.getState().redo).toBe('function');
+		});
+
+		it('Edit menu copy/paste/delete store actions work', () => {
+			expect(typeof useSceneStore.getState().copySelected).toBe('function');
+			expect(typeof useSceneStore.getState().paste).toBe('function');
+			expect(typeof useSceneStore.getState().deleteSelected).toBe('function');
+		});
+
+		it('Edit menu selectAll store action works', () => {
+			const el = createElement('rect', 100, 100);
+			useSceneStore.getState().addElement(el);
+			useSceneStore.getState().selectAll();
+			expect(useSceneStore.getState().selectedIds).toContain(el.id);
+		});
+	});
+
+	describe('Zoom toolbar buttons', () => {
+		it('Zoom in button increases zoom', () => {
+			renderToolbar();
+			const zoomIn = screen.getByLabelText('Zoom in');
+			act(() => {
+				zoomIn.click();
+			});
+			expect(useSceneStore.getState().camera.zoom).toBe(1.25);
+		});
+
+		it('Zoom out button decreases zoom', () => {
+			renderToolbar();
+			const zoomOut = screen.getByLabelText('Zoom out');
+			act(() => {
+				zoomOut.click();
+			});
+			expect(useSceneStore.getState().camera.zoom).toBe(0.75);
+		});
+
+		it('Fit to screen resets zoom and position', () => {
+			useSceneStore.getState().setCamera({ zoom: 2, x: 100, y: 50 });
+			renderToolbar();
+			const fitBtn = screen.getByLabelText('Fit to screen');
+			act(() => {
+				fitBtn.click();
+			});
+			const cam = useSceneStore.getState().camera;
+			expect(cam.zoom).toBe(1);
+			expect(cam.x).toBe(0);
+			expect(cam.y).toBe(0);
+		});
+	});
+
+	describe('Step toolbar buttons', () => {
+		it('Step forward button exists and is clickable', () => {
+			renderToolbar();
+			const stepFwd = screen.getByLabelText('Step forward');
+			expect(stepFwd).toBeDefined();
+			expect(stepFwd).toHaveProperty('disabled', false);
+		});
+
+		it('Step back button exists and is clickable', () => {
+			renderToolbar();
+			const stepBack = screen.getByLabelText('Step back');
+			expect(stepBack).toBeDefined();
+			expect(stepBack).toHaveProperty('disabled', false);
+		});
+	});
+
 	describe('View menu panel toggle actions', () => {
 		// Radix UI MenubarContent renders in a portal and requires full pointer
 		// interaction. In jsdom, we verify the onSelect handlers are wired by

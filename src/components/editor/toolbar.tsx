@@ -111,6 +111,35 @@ function handleExport() {
 	useExportStore.getState().setDialogOpen(true);
 }
 
+const ZOOM_STEP = 0.25;
+const ZOOM_MIN = 0.1;
+const ZOOM_MAX = 5;
+const STEP_INCREMENT = 0.1;
+
+function handleZoomIn() {
+	const { camera, setCamera } = useSceneStore.getState();
+	setCamera({ zoom: Math.min(camera.zoom + ZOOM_STEP, ZOOM_MAX) });
+}
+
+function handleZoomOut() {
+	const { camera, setCamera } = useSceneStore.getState();
+	setCamera({ zoom: Math.max(camera.zoom - ZOOM_STEP, ZOOM_MIN) });
+}
+
+function handleFitToScreen() {
+	useSceneStore.getState().setCamera({ zoom: 1, x: 0, y: 0 });
+}
+
+function handleStepBack() {
+	const { playback, seek } = useTimelineStore.getState();
+	seek(Math.max(playback.currentTime - STEP_INCREMENT, 0));
+}
+
+function handleStepForward() {
+	const { playback, seek, duration } = useTimelineStore.getState();
+	seek(Math.min(playback.currentTime + STEP_INCREMENT, duration));
+}
+
 export function Toolbar() {
 	const undoDisabled = useHistoryStore((s) => !canUndo(s));
 	const redoDisabled = useHistoryStore((s) => !canRedo(s));
@@ -149,21 +178,25 @@ export function Toolbar() {
 					<MenubarMenu>
 						<MenubarTrigger className="h-7 px-2 text-xs">Edit</MenubarTrigger>
 						<MenubarContent>
-							<MenubarItem>
+							<MenubarItem onSelect={() => useHistoryStore.getState().undo()}>
 								Undo <MenubarShortcut>Ctrl+Z</MenubarShortcut>
 							</MenubarItem>
-							<MenubarItem>
+							<MenubarItem onSelect={() => useHistoryStore.getState().redo()}>
 								Redo <MenubarShortcut>Ctrl+Shift+Z</MenubarShortcut>
 							</MenubarItem>
 							<MenubarSeparator />
-							<MenubarItem>
+							<MenubarItem onSelect={() => useSceneStore.getState().copySelected()}>
 								Copy <MenubarShortcut>Ctrl+C</MenubarShortcut>
 							</MenubarItem>
-							<MenubarItem>
+							<MenubarItem onSelect={() => useSceneStore.getState().paste()}>
 								Paste <MenubarShortcut>Ctrl+V</MenubarShortcut>
 							</MenubarItem>
-							<MenubarItem>
+							<MenubarItem onSelect={() => useSceneStore.getState().deleteSelected()}>
 								Delete <MenubarShortcut>Del</MenubarShortcut>
+							</MenubarItem>
+							<MenubarSeparator />
+							<MenubarItem onSelect={() => useSceneStore.getState().selectAll()}>
+								Select All <MenubarShortcut>Ctrl+A</MenubarShortcut>
 							</MenubarItem>
 						</MenubarContent>
 					</MenubarMenu>
@@ -221,21 +254,26 @@ export function Toolbar() {
 
 				<Separator orientation="vertical" className="mx-1 h-5" />
 
-				<ToolbarButton icon={Minus} label="Zoom out" shortcut="Ctrl+-" />
+				<ToolbarButton icon={Minus} label="Zoom out" shortcut="Ctrl+-" onClick={handleZoomOut} />
 				<span className="min-w-[3rem] text-center text-xs text-muted-foreground">
 					{zoomPercent}
 				</span>
-				<ToolbarButton icon={Plus} label="Zoom in" shortcut="Ctrl+=" />
-				<ToolbarButton icon={Maximize} label="Fit to screen" shortcut="Ctrl+0" />
+				<ToolbarButton icon={Plus} label="Zoom in" shortcut="Ctrl+=" onClick={handleZoomIn} />
+				<ToolbarButton
+					icon={Maximize}
+					label="Fit to screen"
+					shortcut="Ctrl+0"
+					onClick={handleFitToScreen}
+				/>
 
 				<Separator orientation="vertical" className="mx-1 h-5" />
 
 				<div className="flex items-center gap-0.5 rounded-md bg-secondary/50 px-1">
-					<ToolbarButton icon={SkipBack} label="Step back" />
+					<ToolbarButton icon={SkipBack} label="Step back" onClick={handleStepBack} />
 					<ToolbarButton icon={Play} label="Play" shortcut="Space" onClick={play} />
 					<ToolbarButton icon={Pause} label="Pause" onClick={pause} />
 					<ToolbarButton icon={Square} label="Stop" onClick={stop} />
-					<ToolbarButton icon={SkipForward} label="Step forward" />
+					<ToolbarButton icon={SkipForward} label="Step forward" onClick={handleStepForward} />
 				</div>
 
 				<DropdownMenu>
