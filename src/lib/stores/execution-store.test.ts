@@ -25,7 +25,7 @@ describe('executionStore', () => {
 		});
 
 		it('starts with empty breakpoints', () => {
-			expect(useExecutionStore.getState().breakpoints).toEqual([]);
+			expect(useExecutionStore.getState().breakpoints).toEqual({});
 		});
 
 		it('starts with empty source code', () => {
@@ -134,29 +134,84 @@ describe('executionStore', () => {
 	});
 
 	describe('breakpoints', () => {
-		it('sets a breakpoint', () => {
-			useExecutionStore.getState().setBreakpoint(10);
-			expect(useExecutionStore.getState().breakpoints).toContain(10);
+		it('adds a breakpoint with correct defaults', () => {
+			useExecutionStore.getState().addBreakpoint(10);
+			const bp = useExecutionStore.getState().breakpoints['line:10'];
+			expect(bp).toBeDefined();
+			expect(bp?.line).toBe(10);
+			expect(bp?.enabled).toBe(true);
+			expect(bp?.hitCount).toBe(0);
+			expect(bp?.condition).toBeUndefined();
 		});
 
-		it('does not duplicate breakpoints', () => {
-			useExecutionStore.getState().setBreakpoint(10);
-			useExecutionStore.getState().setBreakpoint(10);
-			expect(useExecutionStore.getState().breakpoints).toEqual([10]);
+		it('does not duplicate breakpoints on same line', () => {
+			useExecutionStore.getState().addBreakpoint(10);
+			useExecutionStore.getState().addBreakpoint(10);
+			expect(Object.keys(useExecutionStore.getState().breakpoints)).toHaveLength(1);
 		});
 
 		it('removes a breakpoint', () => {
-			useExecutionStore.getState().setBreakpoint(10);
+			useExecutionStore.getState().addBreakpoint(10);
 			useExecutionStore.getState().removeBreakpoint(10);
-			expect(useExecutionStore.getState().breakpoints).not.toContain(10);
+			expect(useExecutionStore.getState().breakpoints['line:10']).toBeUndefined();
 		});
 
 		it('toggles breakpoint on/off', () => {
 			useExecutionStore.getState().toggleBreakpoint(10);
-			expect(useExecutionStore.getState().breakpoints).toContain(10);
+			expect(useExecutionStore.getState().breakpoints['line:10']).toBeDefined();
 
 			useExecutionStore.getState().toggleBreakpoint(10);
-			expect(useExecutionStore.getState().breakpoints).not.toContain(10);
+			expect(useExecutionStore.getState().breakpoints['line:10']).toBeUndefined();
+		});
+
+		it('enables a disabled breakpoint', () => {
+			useExecutionStore.getState().addBreakpoint(10);
+			useExecutionStore.getState().disableBreakpoint(10);
+			useExecutionStore.getState().enableBreakpoint(10);
+			expect(useExecutionStore.getState().breakpoints['line:10']?.enabled).toBe(true);
+		});
+
+		it('disables an enabled breakpoint', () => {
+			useExecutionStore.getState().addBreakpoint(10);
+			useExecutionStore.getState().disableBreakpoint(10);
+			expect(useExecutionStore.getState().breakpoints['line:10']?.enabled).toBe(false);
+		});
+
+		it('sets a condition on a breakpoint', () => {
+			useExecutionStore.getState().addBreakpoint(10);
+			useExecutionStore.getState().setBreakpointCondition(10, 'i > 5');
+			expect(useExecutionStore.getState().breakpoints['line:10']?.condition).toBe('i > 5');
+		});
+
+		it('clears a condition on a breakpoint', () => {
+			useExecutionStore.getState().addBreakpoint(10);
+			useExecutionStore.getState().setBreakpointCondition(10, 'i > 5');
+			useExecutionStore.getState().setBreakpointCondition(10, undefined);
+			expect(useExecutionStore.getState().breakpoints['line:10']?.condition).toBeUndefined();
+		});
+
+		it('increments hit count', () => {
+			useExecutionStore.getState().addBreakpoint(10);
+			useExecutionStore.getState().incrementBreakpointHitCount(10);
+			useExecutionStore.getState().incrementBreakpointHitCount(10);
+			expect(useExecutionStore.getState().breakpoints['line:10']?.hitCount).toBe(2);
+		});
+
+		it('clears all breakpoints', () => {
+			useExecutionStore.getState().addBreakpoint(5);
+			useExecutionStore.getState().addBreakpoint(10);
+			useExecutionStore.getState().addBreakpoint(15);
+			useExecutionStore.getState().clearAllBreakpoints();
+			expect(useExecutionStore.getState().breakpoints).toEqual({});
+		});
+
+		it('getBreakpointLines returns enabled line numbers', () => {
+			useExecutionStore.getState().addBreakpoint(5);
+			useExecutionStore.getState().addBreakpoint(10);
+			useExecutionStore.getState().addBreakpoint(15);
+			useExecutionStore.getState().disableBreakpoint(10);
+			const lines = useExecutionStore.getState().getBreakpointLines();
+			expect(lines).toEqual([5, 15]);
 		});
 	});
 
@@ -238,7 +293,7 @@ describe('executionStore', () => {
 			useExecutionStore.getState().setVariables({
 				x: { name: 'x', value: 5, type: 'number', previousValue: 0, changed: true },
 			});
-			useExecutionStore.getState().setBreakpoint(10);
+			useExecutionStore.getState().addBreakpoint(10);
 
 			const state = useExecutionStore.getState();
 			const json = JSON.stringify({

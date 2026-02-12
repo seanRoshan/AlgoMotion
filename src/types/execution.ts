@@ -34,6 +34,19 @@ export interface VariableSnapshot {
 }
 
 /**
+ * Enhanced breakpoint with conditional support, hit counts, and enable/disable.
+ *
+ * Spec reference: Section 6.5
+ */
+export interface Breakpoint {
+	id: string;
+	line: number;
+	enabled: boolean;
+	condition?: string;
+	hitCount: number;
+}
+
+/**
  * A heap-allocated object tracked by the execution engine.
  */
 export interface HeapObject {

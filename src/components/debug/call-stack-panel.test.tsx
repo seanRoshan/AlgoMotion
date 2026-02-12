@@ -29,7 +29,7 @@ vi.mock('@/lib/stores/execution-store', () => ({
 				animationTime: 0,
 				lineAnnotations: {},
 			},
-			breakpoints: [],
+			breakpoints: {},
 			sourceCode: '',
 			setCurrentLine: mockSetCurrentLine,
 		}),

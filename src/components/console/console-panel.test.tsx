@@ -25,7 +25,7 @@ vi.mock('@/lib/stores/execution-store', () => ({
 				stepCount: 0,
 				animationTime: 0,
 			},
-			breakpoints: [],
+			breakpoints: {},
 			sourceCode: '',
 			clearOutput: mockClearOutput,
 		}),
