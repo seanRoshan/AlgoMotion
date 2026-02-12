@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCanvasKeyboard } from '@/hooks/use-canvas-keyboard';
 import { SceneManager } from '@/lib/pixi/scene-manager';
 import { useSceneStore } from '@/lib/stores/scene-store';
 import { useUIStore } from '@/lib/stores/ui-store';
+import { CanvasRuler } from './canvas-ruler';
 
 /**
  * React wrapper for the imperative Pixi.js canvas.
@@ -16,9 +17,14 @@ import { useUIStore } from '@/lib/stores/ui-store';
  *
  * Spec reference: Section 5, 6.1
  */
+const RULER_SIZE = 24;
+
 export function PixiCanvas() {
 	const containerRef = useRef<HTMLDivElement>(null);
+	const wrapperRef = useRef<HTMLDivElement>(null);
 	const managerRef = useRef<SceneManager | null>(null);
+	const [cursorX, setCursorX] = useState<number | null>(null);
+	const [cursorY, setCursorY] = useState<number | null>(null);
 
 	// Refresh selection overlay after keyboard-driven changes
 	const handleSelectionChange = useCallback(() => {
@@ -26,6 +32,31 @@ export function PixiCanvas() {
 	}, []);
 
 	useCanvasKeyboard(containerRef, handleSelectionChange);
+
+	// Track cursor position for ruler indicators
+	useEffect(() => {
+		const wrapper = wrapperRef.current;
+		if (!wrapper) return;
+
+		function onMouseMove(e: MouseEvent) {
+			const rect = wrapper?.getBoundingClientRect();
+			if (!rect) return;
+			setCursorX(e.clientX - rect.left - RULER_SIZE);
+			setCursorY(e.clientY - rect.top - RULER_SIZE);
+		}
+
+		function onMouseLeave() {
+			setCursorX(null);
+			setCursorY(null);
+		}
+
+		wrapper.addEventListener('mousemove', onMouseMove);
+		wrapper.addEventListener('mouseleave', onMouseLeave);
+		return () => {
+			wrapper.removeEventListener('mousemove', onMouseMove);
+			wrapper.removeEventListener('mouseleave', onMouseLeave);
+		};
+	}, []);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -138,11 +169,34 @@ export function PixiCanvas() {
 	}, []);
 
 	return (
-		<div
-			ref={containerRef}
-			className="relative h-full w-full overflow-hidden"
-			role="application"
-			aria-label="Canvas workspace"
-		/>
+		<div ref={wrapperRef} className="relative h-full w-full overflow-hidden">
+			{/* Corner dead zone where rulers meet */}
+			<div
+				className="absolute top-0 left-0 z-20 bg-[#1e1e2e]"
+				style={{ width: RULER_SIZE, height: RULER_SIZE }}
+			/>
+			{/* Horizontal ruler */}
+			<div
+				className="absolute top-0 z-10"
+				style={{ left: RULER_SIZE, right: 0, height: RULER_SIZE }}
+			>
+				<CanvasRuler orientation="horizontal" cursorPosition={cursorX} />
+			</div>
+			{/* Vertical ruler */}
+			<div
+				className="absolute left-0 z-10"
+				style={{ top: RULER_SIZE, bottom: 0, width: RULER_SIZE }}
+			>
+				<CanvasRuler orientation="vertical" cursorPosition={cursorY} />
+			</div>
+			{/* Canvas area */}
+			<div
+				ref={containerRef}
+				className="absolute overflow-hidden"
+				style={{ top: RULER_SIZE, left: RULER_SIZE, right: 0, bottom: 0 }}
+				role="application"
+				aria-label="Canvas workspace"
+			/>
+		</div>
 	);
 }
