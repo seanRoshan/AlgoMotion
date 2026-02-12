@@ -42,3 +42,13 @@ next-env.d.ts
 
 # sentry
 .sentryclirc
+
+# screenshots and test artifacts
+*.png
+TECH_VALIDATION_*.md
+
+# playwright MCP
+.playwright-mcp/
+
+# supabase temp
+supabase/.temp/
