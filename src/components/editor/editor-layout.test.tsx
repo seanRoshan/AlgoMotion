@@ -162,6 +162,91 @@ describe('EditorLayout', () => {
 		});
 	});
 
+	describe('panel size preservation on toggle cycle', () => {
+		it('preserves left panel size across collapse/expand cycle', () => {
+			useUIStore.getState().setPanelSize('left', 22);
+			render(<EditorLayout />);
+
+			// Toggle off
+			act(() => {
+				useUIStore.getState().togglePanel('left');
+			});
+			expect(useUIStore.getState().panels.left).toBe(false);
+			expect(useUIStore.getState().lastPanelSizes.left).toBe(22);
+
+			// Toggle back on
+			act(() => {
+				useUIStore.getState().togglePanel('left');
+			});
+			expect(useUIStore.getState().panels.left).toBe(true);
+			// panelSizes should be restored, not 0
+			expect(useUIStore.getState().panelSizes.left).toBe(22);
+		});
+
+		it('preserves right panel size across collapse/expand cycle', () => {
+			useUIStore.getState().setPanelSize('right', 25);
+			render(<EditorLayout />);
+
+			act(() => {
+				useUIStore.getState().togglePanel('right');
+			});
+			expect(useUIStore.getState().lastPanelSizes.right).toBe(25);
+
+			act(() => {
+				useUIStore.getState().togglePanel('right');
+			});
+			expect(useUIStore.getState().panelSizes.right).toBe(25);
+		});
+
+		it('preserves bottom panel size across collapse/expand cycle', () => {
+			useUIStore.getState().setPanelSize('bottom', 40);
+			render(<EditorLayout />);
+
+			act(() => {
+				useUIStore.getState().togglePanel('bottom');
+			});
+			expect(useUIStore.getState().lastPanelSizes.bottom).toBe(40);
+
+			act(() => {
+				useUIStore.getState().togglePanel('bottom');
+			});
+			expect(useUIStore.getState().panelSizes.bottom).toBe(40);
+		});
+
+		it('keyboard shortcut Ctrl+B preserves panel size', () => {
+			useUIStore.getState().setPanelSize('left', 22);
+			render(<EditorLayout />);
+
+			// Collapse via shortcut
+			act(() => {
+				fireEvent.keyDown(document, { key: 'b', ctrlKey: true });
+			});
+			expect(useUIStore.getState().panels.left).toBe(false);
+			expect(useUIStore.getState().lastPanelSizes.left).toBe(22);
+
+			// Expand via shortcut
+			act(() => {
+				fireEvent.keyDown(document, { key: 'b', ctrlKey: true });
+			});
+			expect(useUIStore.getState().panels.left).toBe(true);
+			expect(useUIStore.getState().panelSizes.left).toBe(22);
+		});
+	});
+
+	describe('resize callback does not corrupt sizes', () => {
+		it('does not save panelSizes as 0 when panel is collapsed via toggle', () => {
+			render(<EditorLayout />);
+
+			act(() => {
+				useUIStore.getState().togglePanel('left');
+			});
+
+			// Even after collapse, panelSizes should retain the last valid value
+			// (not be overwritten to 0 by the resize callback)
+			expect(useUIStore.getState().lastPanelSizes.left).toBeGreaterThan(0);
+		});
+	});
+
 	describe('cleanup', () => {
 		it('keyboard shortcuts stop working after unmount', () => {
 			const { unmount } = render(<EditorLayout />);

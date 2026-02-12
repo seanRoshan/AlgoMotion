@@ -31,39 +31,54 @@ export function EditorLayout() {
 	const bottomRef = usePanelRef();
 
 	const panelSizes = useUIStore((s) => s.panelSizes);
+	const lastPanelSizes = useUIStore((s) => s.lastPanelSizes);
 	const panels = useUIStore((s) => s.panels);
 	const setPanelSize = useUIStore((s) => s.setPanelSize);
 	const setPanelVisible = useUIStore((s) => s.setPanelVisible);
 
-	// Sync imperative panel collapse/expand with store visibility
+	// Sync imperative panel collapse/expand with store visibility.
+	// Use resize() with explicit percentage to guarantee the panel restores
+	// to the correct size (expand() alone may restore to a stale 0 value).
 	useEffect(() => {
 		const panel = leftRef.current;
 		if (!panel) return;
-		if (panels.left && panel.isCollapsed()) panel.expand();
-		else if (!panels.left && !panel.isCollapsed()) panel.collapse();
-	}, [panels.left, leftRef]);
+		if (panels.left && panel.isCollapsed()) {
+			panel.resize(`${lastPanelSizes.left}%`);
+		} else if (!panels.left && !panel.isCollapsed()) {
+			panel.collapse();
+		}
+	}, [panels.left, lastPanelSizes.left, leftRef]);
 
 	useEffect(() => {
 		const panel = rightRef.current;
 		if (!panel) return;
-		if (panels.right && panel.isCollapsed()) panel.expand();
-		else if (!panels.right && !panel.isCollapsed()) panel.collapse();
-	}, [panels.right, rightRef]);
+		if (panels.right && panel.isCollapsed()) {
+			panel.resize(`${lastPanelSizes.right}%`);
+		} else if (!panels.right && !panel.isCollapsed()) {
+			panel.collapse();
+		}
+	}, [panels.right, lastPanelSizes.right, rightRef]);
 
 	useEffect(() => {
 		const panel = bottomRef.current;
 		if (!panel) return;
-		if (panels.bottom && panel.isCollapsed()) panel.expand();
-		else if (!panels.bottom && !panel.isCollapsed()) panel.collapse();
-	}, [panels.bottom, bottomRef]);
+		if (panels.bottom && panel.isCollapsed()) {
+			panel.resize(`${lastPanelSizes.bottom}%`);
+		} else if (!panels.bottom && !panel.isCollapsed()) {
+			panel.collapse();
+		}
+	}, [panels.bottom, lastPanelSizes.bottom, bottomRef]);
 
 	// Track resize and sync collapsed state back to store.
 	// onResize fires on mount with prevPanelSize=undefined — skip that to avoid
 	// persisting corrupted pixel-based values over the correct percentages.
+	// IMPORTANT: Only update panelSizes when size > 0 to prevent saving 0 on collapse.
 	const handleLeftResize = useCallback(
 		(size: PanelSize, _id: string | number | undefined, prevSize: PanelSize | undefined) => {
 			if (!prevSize) return; // Skip initial mount callback
-			setPanelSize('left', size.asPercentage);
+			if (size.asPercentage > 0) {
+				setPanelSize('left', size.asPercentage);
+			}
 			// Sync collapsed state from drag-to-collapse
 			if (size.asPercentage === 0 && panels.left) setPanelVisible('left', false);
 			else if (size.asPercentage > 0 && !panels.left) setPanelVisible('left', true);
@@ -74,7 +89,9 @@ export function EditorLayout() {
 	const handleRightResize = useCallback(
 		(size: PanelSize, _id: string | number | undefined, prevSize: PanelSize | undefined) => {
 			if (!prevSize) return;
-			setPanelSize('right', size.asPercentage);
+			if (size.asPercentage > 0) {
+				setPanelSize('right', size.asPercentage);
+			}
 			if (size.asPercentage === 0 && panels.right) setPanelVisible('right', false);
 			else if (size.asPercentage > 0 && !panels.right) setPanelVisible('right', true);
 		},
@@ -84,7 +101,9 @@ export function EditorLayout() {
 	const handleBottomResize = useCallback(
 		(size: PanelSize, _id: string | number | undefined, prevSize: PanelSize | undefined) => {
 			if (!prevSize) return;
-			setPanelSize('bottom', size.asPercentage);
+			if (size.asPercentage > 0) {
+				setPanelSize('bottom', size.asPercentage);
+			}
 			if (size.asPercentage === 0 && panels.bottom) setPanelVisible('bottom', false);
 			else if (size.asPercentage > 0 && !panels.bottom) setPanelVisible('bottom', true);
 		},

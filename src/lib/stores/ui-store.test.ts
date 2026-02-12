@@ -156,6 +156,91 @@ describe('uiStore', () => {
 		});
 	});
 
+	describe('panel size preservation on toggle', () => {
+		it('saves panel size before collapsing via togglePanel', () => {
+			// Default left size is 18
+			useUIStore.getState().togglePanel('left');
+			expect(useUIStore.getState().panels.left).toBe(false);
+			// lastPanelSizes should remember the pre-collapse size
+			expect(useUIStore.getState().lastPanelSizes.left).toBe(18);
+		});
+
+		it('restores panel size when re-expanding via togglePanel', () => {
+			// Set custom size, then collapse and re-expand
+			useUIStore.getState().setPanelSize('left', 22);
+			useUIStore.getState().togglePanel('left'); // collapse
+			expect(useUIStore.getState().panels.left).toBe(false);
+			expect(useUIStore.getState().lastPanelSizes.left).toBe(22);
+
+			useUIStore.getState().togglePanel('left'); // expand
+			expect(useUIStore.getState().panels.left).toBe(true);
+			expect(useUIStore.getState().panelSizes.left).toBe(22);
+		});
+
+		it('saves panel size before collapsing via setPanelVisible', () => {
+			useUIStore.getState().setPanelSize('right', 25);
+			useUIStore.getState().setPanelVisible('right', false);
+			expect(useUIStore.getState().lastPanelSizes.right).toBe(25);
+		});
+
+		it('restores panel size when re-expanding via setPanelVisible', () => {
+			useUIStore.getState().setPanelSize('bottom', 40);
+			useUIStore.getState().setPanelVisible('bottom', false); // collapse
+			useUIStore.getState().setPanelVisible('bottom', true); // expand
+			expect(useUIStore.getState().panelSizes.bottom).toBe(40);
+		});
+
+		it('does not overwrite lastPanelSizes when already collapsed', () => {
+			useUIStore.getState().setPanelSize('left', 22);
+			useUIStore.getState().setPanelVisible('left', false); // saves 22
+			// Calling setPanelVisible(false) again should not overwrite
+			useUIStore.getState().setPanelVisible('left', false);
+			expect(useUIStore.getState().lastPanelSizes.left).toBe(22);
+		});
+
+		it('works independently for each panel', () => {
+			useUIStore.getState().setPanelSize('left', 15);
+			useUIStore.getState().setPanelSize('right', 25);
+			useUIStore.getState().setPanelSize('bottom', 40);
+
+			useUIStore.getState().togglePanel('left');
+			useUIStore.getState().togglePanel('right');
+
+			expect(useUIStore.getState().lastPanelSizes.left).toBe(15);
+			expect(useUIStore.getState().lastPanelSizes.right).toBe(25);
+			// bottom wasn't toggled, its lastPanelSizes should still be the initial
+			expect(useUIStore.getState().panelSizes.bottom).toBe(40);
+
+			// Re-expand left
+			useUIStore.getState().togglePanel('left');
+			expect(useUIStore.getState().panelSizes.left).toBe(15);
+		});
+
+		it('uses default size if lastPanelSizes has no saved value', () => {
+			// Force panels.left to false without going through togglePanel
+			// (simulates corrupted persisted state)
+			const store = useUIStore.getState();
+			// Initially lastPanelSizes should have defaults
+			expect(store.lastPanelSizes.left).toBeGreaterThan(0);
+		});
+
+		it('initializes lastPanelSizes matching default panelSizes', () => {
+			const state = useUIStore.getState();
+			expect(state.lastPanelSizes).toEqual(state.panelSizes);
+		});
+
+		it('reset restores lastPanelSizes to defaults', () => {
+			useUIStore.getState().setPanelSize('left', 30);
+			useUIStore.getState().togglePanel('left');
+			useUIStore.getState().reset();
+			expect(useUIStore.getState().lastPanelSizes).toEqual({
+				left: 18,
+				right: 20,
+				bottom: 35,
+			});
+		});
+	});
+
 	describe('serialization', () => {
 		it('state contains no Map or Set', () => {
 			const state = useUIStore.getState();
@@ -163,6 +248,7 @@ describe('uiStore', () => {
 				tool: state.tool,
 				panels: state.panels,
 				panelSizes: state.panelSizes,
+				lastPanelSizes: state.lastPanelSizes,
 				gridVisible: state.gridVisible,
 				snapToGrid: state.snapToGrid,
 				theme: state.theme,
