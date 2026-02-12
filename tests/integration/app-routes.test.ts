@@ -90,10 +90,10 @@ describe('App Router page structure (Issue #8)', () => {
 			expect(mod.metadata.title).toBeTruthy();
 		});
 
-		it('embed page has metadata', async () => {
+		it('embed page has generateMetadata', async () => {
 			const mod = await import('../../src/app/embed/[projectId]/page');
-			expect(mod.metadata).toBeDefined();
-			expect(mod.metadata.title).toBeTruthy();
+			expect(mod.generateMetadata).toBeDefined();
+			expect(typeof mod.generateMetadata).toBe('function');
 		});
 	});
 });
