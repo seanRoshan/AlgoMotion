@@ -1,7 +1,13 @@
 import { FolderOpen } from 'lucide-react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';
+
+export const metadata: Metadata = {
+	title: 'Dashboard — AlgoMotion',
+	description: 'View and manage your AlgoMotion animation projects.',
+};
 
 export default function DashboardPage() {
 	return (
