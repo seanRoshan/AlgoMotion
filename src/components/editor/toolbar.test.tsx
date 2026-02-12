@@ -290,4 +290,41 @@ describe('Toolbar', () => {
 			expect(useUIStore.getState().commandPaletteOpen).toBe(true);
 		});
 	});
+
+	describe('Insert menu actions', () => {
+		it('Insert menu trigger exists and is clickable', () => {
+			renderToolbar();
+			const insertTrigger = screen.getByText('Insert');
+			expect(insertTrigger).toBeDefined();
+			expect(insertTrigger.getAttribute('role')).toBe('menuitem');
+		});
+
+		it('createElement creates rect elements and adds to scene', () => {
+			const el = createElement('rect', 200, 200);
+			useSceneStore.getState().addElement(el);
+			expect(useSceneStore.getState().elementIds).toContain(el.id);
+			expect(useSceneStore.getState().elements[el.id]?.type).toBe('rect');
+		});
+
+		it('createElement creates ellipse elements and adds to scene', () => {
+			const el = createElement('ellipse', 200, 200);
+			useSceneStore.getState().addElement(el);
+			expect(useSceneStore.getState().elementIds).toContain(el.id);
+			expect(useSceneStore.getState().elements[el.id]?.type).toBe('ellipse');
+		});
+
+		it('createElement creates text elements and adds to scene', () => {
+			const el = createElement('text', 200, 200);
+			useSceneStore.getState().addElement(el);
+			expect(useSceneStore.getState().elementIds).toContain(el.id);
+			expect(useSceneStore.getState().elements[el.id]?.type).toBe('text');
+		});
+
+		it('createElement creates arrow elements and adds to scene', () => {
+			const el = createElement('arrow', 200, 200);
+			useSceneStore.getState().addElement(el);
+			expect(useSceneStore.getState().elementIds).toContain(el.id);
+			expect(useSceneStore.getState().elements[el.id]?.type).toBe('arrow');
+		});
+	});
 });
