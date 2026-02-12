@@ -2,6 +2,7 @@ import type { ArrowShape, SceneElement } from '@/types';
 import { ArrayRenderer } from './array-renderer';
 import { GraphRenderer } from './graph-renderer';
 import { LinkedListRenderer } from './linked-list-renderer';
+import { QueueRenderer } from './queue-renderer';
 import { calculateArrowheadPoints, hexToPixiColor } from './shared';
 import { StackRenderer } from './stack-renderer';
 import { TreeRenderer } from './tree-renderer';
@@ -78,6 +79,7 @@ export class ElementRenderer {
 	private graphRenderer: GraphRenderer;
 	private linkedListRenderer: LinkedListRenderer;
 	private stackRenderer: StackRenderer;
+	private queueRenderer: QueueRenderer;
 
 	constructor(pixi: PixiModule) {
 		this.pixi = pixi;
@@ -86,6 +88,7 @@ export class ElementRenderer {
 		this.graphRenderer = new GraphRenderer(pixi as never);
 		this.linkedListRenderer = new LinkedListRenderer(pixi as never);
 		this.stackRenderer = new StackRenderer(pixi as never);
+		this.queueRenderer = new QueueRenderer(pixi as never);
 	}
 
 	/**
@@ -135,6 +138,13 @@ export class ElementRenderer {
 	 */
 	getStackFrameContainers(elementId: string): unknown[] | undefined {
 		return this.stackRenderer.getFrameContainers(elementId);
+	}
+
+	/**
+	 * Get queue cell containers for animation targeting.
+	 */
+	getQueueCellContainers(elementId: string): unknown[] | undefined {
+		return this.queueRenderer.getCellContainers(elementId);
 	}
 
 	/**
@@ -195,6 +205,11 @@ export class ElementRenderer {
 			case 'stackFrame': {
 				const stackContainer = this.stackRenderer.render(element);
 				container.addChild(stackContainer);
+				break;
+			}
+			case 'queueCell': {
+				const queueContainer = this.queueRenderer.render(element);
+				container.addChild(queueContainer);
 				break;
 			}
 			default:
@@ -258,6 +273,11 @@ export class ElementRenderer {
 			case 'stackFrame': {
 				const stackContainer = this.stackRenderer.render(element);
 				container.addChild(stackContainer);
+				break;
+			}
+			case 'queueCell': {
+				const queueContainer = this.queueRenderer.render(element);
+				container.addChild(queueContainer);
 				break;
 			}
 			default:

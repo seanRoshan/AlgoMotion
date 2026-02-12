@@ -24,6 +24,7 @@ export type ElementType =
 	| 'treeNode'
 	| 'graphNode'
 	| 'linkedListNode'
+	| 'queueCell'
 	| 'hashBucket'
 	// Architecture
 	| 'register'
@@ -105,6 +106,7 @@ export const DATA_STRUCTURE_TYPES = [
 	'treeNode',
 	'graphNode',
 	'linkedListNode',
+	'queueCell',
 	'hashBucket',
 ] as const satisfies readonly ElementType[];
 
@@ -164,6 +166,7 @@ const NODE_TYPES: ReadonlySet<string> = new Set([
 	'treeNode',
 	'graphNode',
 	'linkedListNode',
+	'queueCell',
 	'hashBucket',
 	'register',
 	'aluUnit',

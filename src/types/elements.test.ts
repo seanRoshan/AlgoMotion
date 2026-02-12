@@ -53,8 +53,8 @@ describe('element category constants', () => {
 		expect(PRIMITIVE_TYPES).toContain('image');
 	});
 
-	it('has 8 data structure types', () => {
-		expect(DATA_STRUCTURE_TYPES).toHaveLength(8);
+	it('has 9 data structure types', () => {
+		expect(DATA_STRUCTURE_TYPES).toHaveLength(9);
 		expect(DATA_STRUCTURE_TYPES).toContain('arrayCell');
 		expect(DATA_STRUCTURE_TYPES).toContain('treeNode');
 		expect(DATA_STRUCTURE_TYPES).toContain('linkedListNode');
@@ -80,7 +80,7 @@ describe('element category constants', () => {
 		expect(ANNOTATION_TYPES).toContain('codeSnippet');
 	});
 
-	it('covers all 34 element types across categories', () => {
+	it('covers all 35 element types across categories', () => {
 		const allTypes = [
 			...PRIMITIVE_TYPES,
 			...DATA_STRUCTURE_TYPES,
@@ -88,9 +88,9 @@ describe('element category constants', () => {
 			...MATH_TYPES,
 			...ANNOTATION_TYPES,
 		];
-		expect(allTypes).toHaveLength(34);
+		expect(allTypes).toHaveLength(35);
 		// No duplicates
-		expect(new Set(allTypes).size).toBe(34);
+		expect(new Set(allTypes).size).toBe(35);
 	});
 });
 
