@@ -12,7 +12,8 @@
 		"type-check": "tsc --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"analyze": "ANALYZE=true next build"
 	},
 	"dependencies": {
 		"@ffmpeg/ffmpeg": "0.12.15",
@@ -52,6 +53,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3",
+		"@next/bundle-analyzer": "^16.1.6",
 		"@playwright/test": "^1.58",
 		"@tailwindcss/postcss": "^4",
 		"@testing-library/dom": "latest",
