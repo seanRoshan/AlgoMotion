@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { useHistoryStore } from '@/lib/stores/history-store';
 import { useSceneStore } from '@/lib/stores/scene-store';
 import type { SceneElement } from '@/types';
 
@@ -31,6 +32,7 @@ function makeElement(overrides: Partial<SceneElement> = {}): SceneElement {
 }
 
 afterEach(() => {
+	useHistoryStore.getState().clearHistory();
 	useSceneStore.getState().reset();
 });
 
@@ -103,5 +105,28 @@ describe('canvas keyboard shortcuts (store-level)', () => {
 			x: 110,
 			y: 200,
 		});
+	});
+
+	it('Ctrl+Z undoes the last action', () => {
+		const store = useSceneStore.getState();
+		store.addElement(makeElement({ id: 'el-undo', position: { x: 10, y: 20 } }));
+		expect(useSceneStore.getState().elements['el-undo']).toBeDefined();
+
+		// Simulate Ctrl+Z by calling undo directly
+		useHistoryStore.getState().undo();
+
+		expect(useSceneStore.getState().elements['el-undo']).toBeUndefined();
+	});
+
+	it('Ctrl+Shift+Z redoes the last undone action', () => {
+		const store = useSceneStore.getState();
+		store.addElement(makeElement({ id: 'el-redo', position: { x: 10, y: 20 } }));
+		useHistoryStore.getState().undo();
+		expect(useSceneStore.getState().elements['el-redo']).toBeUndefined();
+
+		// Simulate Ctrl+Shift+Z by calling redo directly
+		useHistoryStore.getState().redo();
+
+		expect(useSceneStore.getState().elements['el-redo']).toBeDefined();
 	});
 });

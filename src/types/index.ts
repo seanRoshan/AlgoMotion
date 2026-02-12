@@ -1,6 +1,5 @@
 // ── Common ──
 
-// ── Animation ──
 export type {
 	AnimatableProperty,
 	AnimationSequence,
@@ -49,6 +48,8 @@ export type {
 	StepEvent,
 	VariableSnapshot,
 } from './execution';
+// ── Animation ──
+export type { ActiveGroup, HistoryEntry } from './history';
 // ── Project ──
 export type {
 	BackgroundStyle,

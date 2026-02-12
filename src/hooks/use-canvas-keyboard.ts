@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { NUDGE_LARGE, NUDGE_SMALL } from '@/lib/pixi/interactions/interaction-constants';
+import { useHistoryStore } from '@/lib/stores/history-store';
 import { useSceneStore } from '@/lib/stores/scene-store';
 
 /**
@@ -13,6 +14,8 @@ export type OnSelectionChange = () => void;
  * Only active when the canvas container has focus.
  *
  * Shortcuts:
+ *   Ctrl/Cmd+Z        — undo
+ *   Ctrl/Cmd+Shift+Z  — redo
  *   Delete/Backspace  — delete selected elements
  *   Ctrl/Cmd+A        — select all
  *   Ctrl/Cmd+D        — duplicate selected
@@ -35,6 +38,22 @@ export function useCanvasKeyboard(
 		function handleKeyDown(e: KeyboardEvent) {
 			const store = useSceneStore.getState();
 			const isMod = e.metaKey || e.ctrlKey;
+
+			// Undo: Ctrl/Cmd+Z (without Shift)
+			if (isMod && !e.shiftKey && e.key === 'z') {
+				e.preventDefault();
+				useHistoryStore.getState().undo();
+				onSelectionChange?.();
+				return;
+			}
+
+			// Redo: Ctrl/Cmd+Shift+Z
+			if (isMod && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+				e.preventDefault();
+				useHistoryStore.getState().redo();
+				onSelectionChange?.();
+				return;
+			}
 
 			switch (e.key) {
 				case 'Delete':
