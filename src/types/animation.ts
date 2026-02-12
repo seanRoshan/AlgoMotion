@@ -95,13 +95,40 @@ export interface TimelineMarker {
 }
 
 /**
- * Built-in composite animation types.
+ * Built-in composite animation types using dot-notation namespaces.
+ * Domain-specific animations use category prefixes to avoid collisions.
  *
- * Spec reference: Section 6.3
+ * Spec reference: Section 9.1
  */
 export type CompositeAnimationType =
-	| 'swap'
-	| 'highlight'
+	// Array operations
+	| 'array.swap'
+	| 'array.shift'
+	| 'array.highlight'
+	| 'array.compare'
+	// Tree operations
+	| 'tree.insert'
+	| 'tree.rotate'
+	| 'tree.traverse'
+	// Graph operations
+	| 'graph.bfs'
+	| 'graph.dfs'
+	| 'graph.dijkstra'
+	// CPU operations
+	| 'cpu.fetch'
+	| 'cpu.decode'
+	| 'cpu.execute'
+	// Cache operations
+	| 'cache.hit'
+	| 'cache.miss'
+	| 'cache.evict'
+	// Pointer operations
+	| 'pointer.follow'
+	| 'pointer.redirect'
+	// Variable operations
+	| 'variable.update'
+	| 'variable.compare'
+	// Generic animations (not domain-specific)
 	| 'fadeIn'
 	| 'fadeOut'
 	| 'slideIn'
