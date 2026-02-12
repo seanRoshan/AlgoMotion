@@ -1,8 +1,22 @@
+import { enablePatches, type Patch, produceWithPatches } from 'immer';
 import { create } from 'zustand';
 import { createJSONStorage, devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { CameraState, Connection, Position, SceneElement, Size } from '@/types';
 import { dexieStorage } from './dexie-storage';
+
+enablePatches();
+
+// ── History callback (set by history-store to avoid circular dependency) ──
+
+type HistoryPushFn = (description: string, patches: Patch[], inversePatches: Patch[]) => void;
+let _onHistoryPush: HistoryPushFn | undefined;
+
+export function registerHistoryPush(fn: HistoryPushFn): void {
+	_onHistoryPush = fn;
+}
+
+// ── State & Actions ──
 
 export interface SceneState {
 	elements: Record<string, SceneElement>;
@@ -50,217 +64,242 @@ const initialState: SceneState = {
 	camera: { x: 0, y: 0, zoom: 1 },
 };
 
+function extractState(store: SceneState): SceneState {
+	return {
+		elements: store.elements,
+		elementIds: store.elementIds,
+		connections: store.connections,
+		connectionIds: store.connectionIds,
+		selectedIds: store.selectedIds,
+		clipboard: store.clipboard,
+		camera: store.camera,
+	};
+}
+
 export const useSceneStore = create<SceneStore>()(
 	devtools(
 		persist(
-			immer((set, get) => ({
-				...initialState,
+			immer((set, get) => {
+				const undoableSet = (recipe: (draft: SceneState) => void, description: string) => {
+					const snapshot = extractState(get());
+					const [nextState, patches, inversePatches] = produceWithPatches(snapshot, recipe);
+					set(nextState as SceneState);
+					if (patches.length > 0 && _onHistoryPush) {
+						_onHistoryPush(description, patches, inversePatches);
+					}
+				};
 
-				addElement: (element) =>
-					set((state) => {
-						state.elements[element.id] = element;
-						state.elementIds.push(element.id);
-					}),
+				return {
+					...initialState,
 
-				removeElement: (id) =>
-					set((state) => {
-						delete state.elements[id];
-						state.elementIds = state.elementIds.filter((eid) => eid !== id);
-						state.selectedIds = state.selectedIds.filter((sid) => sid !== id);
-						// Remove connections referencing this element
-						state.connectionIds = state.connectionIds.filter((cid) => {
-							const conn = state.connections[cid];
-							if (conn && (conn.fromElementId === id || conn.toElementId === id)) {
-								delete state.connections[cid];
-								return false;
-							}
-							return true;
-						});
-					}),
+					// ── Undoable actions ──
 
-				updateElement: (id, updates) =>
-					set((state) => {
-						const el = state.elements[id];
-						if (el) {
-							Object.assign(el, updates);
-						}
-					}),
+					addElement: (element) =>
+						undoableSet((draft) => {
+							draft.elements[element.id] = element;
+							draft.elementIds.push(element.id);
+						}, `Add ${element.type}`),
 
-				moveElement: (id, x, y) =>
-					set((state) => {
-						const el = state.elements[id];
-						if (el) {
-							el.position = { x, y };
-						}
-					}),
-
-				addConnection: (connection) =>
-					set((state) => {
-						state.connections[connection.id] = connection;
-						state.connectionIds.push(connection.id);
-					}),
-
-				removeConnection: (id) =>
-					set((state) => {
-						delete state.connections[id];
-						state.connectionIds = state.connectionIds.filter((cid) => cid !== id);
-					}),
-
-				selectElement: (id) =>
-					set((state) => {
-						state.selectedIds = [id];
-					}),
-
-				deselectAll: () =>
-					set((state) => {
-						state.selectedIds = [];
-					}),
-
-				selectMultiple: (ids) =>
-					set((state) => {
-						state.selectedIds = ids;
-					}),
-
-				toggleSelection: (id) =>
-					set((state) => {
-						const idx = state.selectedIds.indexOf(id);
-						if (idx >= 0) {
-							state.selectedIds.splice(idx, 1);
-						} else {
-							state.selectedIds.push(id);
-						}
-					}),
-
-				copySelected: () =>
-					set((state) => {
-						const { elements, selectedIds } = state;
-						state.clipboard = selectedIds
-							.map((id) => elements[id])
-							.filter((el): el is SceneElement => el !== undefined);
-					}),
-
-				paste: (offsetX = 20, offsetY = 20) => {
-					const { clipboard } = get();
-					const pasted: SceneElement[] = [];
-					const baseTimestamp = Date.now();
-					set((state) => {
-						for (let i = 0; i < clipboard.length; i++) {
-							const el = clipboard[i];
-							if (!el) continue;
-							const newId = `${el.id}-copy-${baseTimestamp}-${i}`;
-							const newEl: SceneElement = {
-								...el,
-								id: newId,
-								position: {
-									x: el.position.x + offsetX,
-									y: el.position.y + offsetY,
-								},
-							};
-							state.elements[newId] = newEl;
-							state.elementIds.push(newId);
-							pasted.push(newEl);
-						}
-					});
-					return pasted;
-				},
-
-				setCamera: (camera) =>
-					set((state) => {
-						Object.assign(state.camera, camera);
-					}),
-
-				selectAll: () =>
-					set((state) => {
-						state.selectedIds = state.elementIds.filter((id) => !state.elements[id]?.locked);
-					}),
-
-				deleteSelected: () =>
-					set((state) => {
-						const idsToDelete = [...state.selectedIds];
-						for (const id of idsToDelete) {
-							delete state.elements[id];
-							state.elementIds = state.elementIds.filter((eid) => eid !== id);
-							// Remove connections attached to this element
-							state.connectionIds = state.connectionIds.filter((cid) => {
-								const conn = state.connections[cid];
+					removeElement: (id) =>
+						undoableSet((draft) => {
+							delete draft.elements[id];
+							draft.elementIds = draft.elementIds.filter((eid) => eid !== id);
+							draft.selectedIds = draft.selectedIds.filter((sid) => sid !== id);
+							draft.connectionIds = draft.connectionIds.filter((cid) => {
+								const conn = draft.connections[cid];
 								if (conn && (conn.fromElementId === id || conn.toElementId === id)) {
-									delete state.connections[cid];
+									delete draft.connections[cid];
 									return false;
 								}
 								return true;
 							});
-						}
-						state.selectedIds = [];
-					}),
+						}, 'Remove element'),
 
-				duplicateSelected: () => {
-					const { selectedIds, elements } = get();
-					if (selectedIds.length === 0) return;
-					const newIds: string[] = [];
-					const timestamp = Date.now();
-					set((state) => {
-						for (let i = 0; i < selectedIds.length; i++) {
-							const origId = selectedIds[i];
-							if (!origId) continue;
-							const orig = elements[origId];
-							if (!orig) continue;
-							const newId = `${origId}-dup-${timestamp}-${i}`;
-							const newEl: SceneElement = {
-								...orig,
-								id: newId,
-								position: {
-									x: orig.position.x + 20,
-									y: orig.position.y + 20,
-								},
-							};
-							state.elements[newId] = newEl;
-							state.elementIds.push(newId);
-							newIds.push(newId);
-						}
-						state.selectedIds = newIds;
-					});
-				},
-
-				nudgeSelected: (dx, dy) =>
-					set((state) => {
-						for (const id of state.selectedIds) {
-							const el = state.elements[id];
+					updateElement: (id, updates) =>
+						undoableSet((draft) => {
+							const el = draft.elements[id];
 							if (el) {
-								el.position.x += dx;
-								el.position.y += dy;
+								Object.assign(el, updates);
 							}
-						}
-					}),
+						}, 'Update element'),
 
-				moveElements: (updates) =>
-					set((state) => {
-						for (const [id, pos] of Object.entries(updates)) {
-							const el = state.elements[id];
+					moveElement: (id, x, y) =>
+						undoableSet((draft) => {
+							const el = draft.elements[id];
 							if (el) {
-								el.position = { ...pos };
+								el.position = { x, y };
 							}
-						}
-					}),
+						}, 'Move element'),
 
-				resizeElement: (id, size, position) =>
-					set((state) => {
-						const el = state.elements[id];
-						if (el) {
-							el.size = { ...size };
-							el.position = { ...position };
-						}
-					}),
+					addConnection: (connection) =>
+						undoableSet((draft) => {
+							draft.connections[connection.id] = connection;
+							draft.connectionIds.push(connection.id);
+						}, 'Add connection'),
 
-				rotateElement: (id, rotation) =>
-					set((state) => {
-						const el = state.elements[id];
-						if (el) {
-							el.rotation = rotation;
-						}
-					}),
+					removeConnection: (id) =>
+						undoableSet((draft) => {
+							delete draft.connections[id];
+							draft.connectionIds = draft.connectionIds.filter((cid) => cid !== id);
+						}, 'Remove connection'),
 
-				reset: () => set(initialState),
-			})),
+					paste: (offsetX = 20, offsetY = 20) => {
+						const { clipboard } = get();
+						const pasted: SceneElement[] = [];
+						const baseTimestamp = Date.now();
+						undoableSet((draft) => {
+							for (let i = 0; i < clipboard.length; i++) {
+								const el = clipboard[i];
+								if (!el) continue;
+								const newId = `${el.id}-copy-${baseTimestamp}-${i}`;
+								const newEl: SceneElement = {
+									...el,
+									id: newId,
+									position: {
+										x: el.position.x + offsetX,
+										y: el.position.y + offsetY,
+									},
+								};
+								draft.elements[newId] = newEl;
+								draft.elementIds.push(newId);
+								pasted.push(newEl);
+							}
+						}, 'Paste elements');
+						return pasted;
+					},
+
+					deleteSelected: () =>
+						undoableSet((draft) => {
+							const idsToDelete = [...draft.selectedIds];
+							for (const id of idsToDelete) {
+								delete draft.elements[id];
+								draft.elementIds = draft.elementIds.filter((eid) => eid !== id);
+								draft.connectionIds = draft.connectionIds.filter((cid) => {
+									const conn = draft.connections[cid];
+									if (conn && (conn.fromElementId === id || conn.toElementId === id)) {
+										delete draft.connections[cid];
+										return false;
+									}
+									return true;
+								});
+							}
+							draft.selectedIds = [];
+						}, 'Delete elements'),
+
+					duplicateSelected: () => {
+						const { selectedIds, elements } = get();
+						if (selectedIds.length === 0) return;
+						const timestamp = Date.now();
+						undoableSet((draft) => {
+							const newIds: string[] = [];
+							for (let i = 0; i < selectedIds.length; i++) {
+								const origId = selectedIds[i];
+								if (!origId) continue;
+								const orig = elements[origId];
+								if (!orig) continue;
+								const newId = `${origId}-dup-${timestamp}-${i}`;
+								const newEl: SceneElement = {
+									...orig,
+									id: newId,
+									position: {
+										x: orig.position.x + 20,
+										y: orig.position.y + 20,
+									},
+								};
+								draft.elements[newId] = newEl;
+								draft.elementIds.push(newId);
+								newIds.push(newId);
+							}
+							draft.selectedIds = newIds;
+						}, 'Duplicate elements');
+					},
+
+					nudgeSelected: (dx, dy) =>
+						undoableSet((draft) => {
+							for (const id of draft.selectedIds) {
+								const el = draft.elements[id];
+								if (el) {
+									el.position.x += dx;
+									el.position.y += dy;
+								}
+							}
+						}, 'Nudge elements'),
+
+					moveElements: (updates) =>
+						undoableSet((draft) => {
+							for (const [id, pos] of Object.entries(updates)) {
+								const el = draft.elements[id];
+								if (el) {
+									el.position = { ...pos };
+								}
+							}
+						}, 'Move elements'),
+
+					resizeElement: (id, size, position) =>
+						undoableSet((draft) => {
+							const el = draft.elements[id];
+							if (el) {
+								el.size = { ...size };
+								el.position = { ...position };
+							}
+						}, 'Resize element'),
+
+					rotateElement: (id, rotation) =>
+						undoableSet((draft) => {
+							const el = draft.elements[id];
+							if (el) {
+								el.rotation = rotation;
+							}
+						}, 'Rotate element'),
+
+					// ── Non-undoable actions ──
+
+					selectElement: (id) =>
+						set((state) => {
+							state.selectedIds = [id];
+						}),
+
+					deselectAll: () =>
+						set((state) => {
+							state.selectedIds = [];
+						}),
+
+					selectMultiple: (ids) =>
+						set((state) => {
+							state.selectedIds = ids;
+						}),
+
+					toggleSelection: (id) =>
+						set((state) => {
+							const idx = state.selectedIds.indexOf(id);
+							if (idx >= 0) {
+								state.selectedIds.splice(idx, 1);
+							} else {
+								state.selectedIds.push(id);
+							}
+						}),
+
+					copySelected: () =>
+						set((state) => {
+							const { elements, selectedIds } = state;
+							state.clipboard = selectedIds
+								.map((id) => elements[id])
+								.filter((el): el is SceneElement => el !== undefined);
+						}),
+
+					setCamera: (camera) =>
+						set((state) => {
+							Object.assign(state.camera, camera);
+						}),
+
+					selectAll: () =>
+						set((state) => {
+							state.selectedIds = state.elementIds.filter((id) => !state.elements[id]?.locked);
+						}),
+
+					reset: () => set(initialState),
+				};
+			}),
 			{
 				name: 'algomotion-scene',
 				storage: createJSONStorage(() => dexieStorage),
