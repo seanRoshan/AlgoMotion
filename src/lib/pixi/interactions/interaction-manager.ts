@@ -302,12 +302,17 @@ export class InteractionManager {
 		const dx = world.x - s.pointerStartWorld.x;
 		const dy = world.y - s.pointerStartWorld.y;
 
-		// Commit final positions to store
+		// Commit final positions to store (only for elements that still exist)
+		const elements = this.deps.getElements();
 		const updates: Record<string, Position> = {};
 		for (const [id, startPos] of Object.entries(s.elementStartPositions)) {
-			updates[id] = { x: startPos.x + dx, y: startPos.y + dy };
+			if (elements[id]) {
+				updates[id] = { x: startPos.x + dx, y: startPos.y + dy };
+			}
 		}
-		this.deps.moveElements(updates);
+		if (Object.keys(updates).length > 0) {
+			this.deps.moveElements(updates);
+		}
 	}
 
 	// ── Selecting (marquee) state ──
@@ -491,7 +496,9 @@ export class InteractionManager {
 		const deltaAngle = currentAngle - s.startAngle;
 		const newRotationDeg = s.startRotation + (deltaAngle * 180) / Math.PI;
 
-		// Commit rotation to store
-		this.deps.rotateElement(s.elementId, newRotationDeg);
+		// Commit rotation to store (guard against element deleted during rotate)
+		if (this.deps.getElements()[s.elementId]) {
+			this.deps.rotateElement(s.elementId, newRotationDeg);
+		}
 	}
 }

@@ -68,8 +68,9 @@ export class SelectionRenderer {
 	 * Render selection overlay for all selected elements.
 	 */
 	render(selectedIds: string[], elements: Record<string, SceneElement>, cameraZoom: number): void {
-		// Clear previous selection graphics
+		// Remove and destroy previous selection graphics
 		if (this.graphics) {
+			this.selectionLayer.removeChildren();
 			this.graphics.destroy();
 		}
 		this.graphics = new this.pixi.Graphics();
