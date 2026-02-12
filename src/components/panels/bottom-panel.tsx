@@ -2,6 +2,7 @@
 
 import { FileCode2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { CallStackPanel } from '@/components/debug/call-stack-panel';
 import { VariableWatchPanel } from '@/components/debug/variable-watch-panel';
 import { EmptyState } from '@/components/shared/empty-state';
 import { TimelinePanel } from '@/components/timeline/timeline-panel';
@@ -48,6 +49,9 @@ export function BottomPanel() {
 				<TabsTrigger value="variables" className="h-6 text-xs">
 					Variables
 				</TabsTrigger>
+				<TabsTrigger value="callstack" className="h-6 text-xs">
+					Call Stack
+				</TabsTrigger>
 				<TabsTrigger value="dsl" className="h-6 text-xs">
 					DSL
 				</TabsTrigger>
@@ -63,6 +67,9 @@ export function BottomPanel() {
 			</TabsContent>
 			<TabsContent value="variables" className="mt-0 h-full">
 				<VariableWatchPanel />
+			</TabsContent>
+			<TabsContent value="callstack" className="mt-0 h-full">
+				<CallStackPanel />
 			</TabsContent>
 			<ScrollArea className="flex-1">
 				<TabsContent value="dsl" className="mt-0">
