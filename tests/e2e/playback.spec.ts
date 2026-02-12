@@ -41,7 +41,7 @@ test.describe('Playback Controls', () => {
 	});
 
 	test('speed selector opens dropdown with options', async ({ page }) => {
-		const speedButton = page.getByText('1x').first();
+		const speedButton = page.locator('[data-testid="speed-selector"]');
 		await speedButton.click();
 
 		// Should show speed options
@@ -52,11 +52,11 @@ test.describe('Playback Controls', () => {
 	});
 
 	test('can change playback speed', async ({ page }) => {
-		const speedButton = page.getByText('1x').first();
+		const speedButton = page.locator('[data-testid="speed-selector"]');
 		await speedButton.click();
 		await page.getByRole('menuitem', { name: '2x' }).click();
 
 		// Speed display should update
-		await expect(page.getByText('2x').first()).toBeVisible();
+		await expect(speedButton).toHaveText(/2x/);
 	});
 });

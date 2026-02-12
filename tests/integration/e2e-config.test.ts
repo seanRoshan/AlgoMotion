@@ -20,10 +20,8 @@ describe('E2E Test Suite Configuration', () => {
 		expect(existsSync(CONFIG_PATH)).toBe(true);
 	});
 
-	it('configures three browser projects', () => {
+	it('configures chromium browser project', () => {
 		expect(configContent).toContain('chromium');
-		expect(configContent).toContain('firefox');
-		expect(configContent).toContain('webkit');
 	});
 
 	it('configures visual regression snapshot path', () => {

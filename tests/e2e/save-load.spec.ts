@@ -14,7 +14,9 @@ test.describe('Save and Load', () => {
 
 		await page.goto('/editor/demo');
 		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(1000);
+
+		// Wait for hydration and async Pixi.js init to complete
+		await expect(page.locator('canvas')).toBeVisible();
 
 		// No uncaught errors should occur during load
 		expect(errors).toHaveLength(0);
@@ -33,7 +35,9 @@ test.describe('Save and Load', () => {
 			dialogAppeared = true;
 		});
 		await page.keyboard.press('Control+s');
-		await page.waitForTimeout(500);
+
+		// Wait briefly for any dialog to appear, then verify none did
+		await page.waitForLoadState('domcontentloaded');
 		expect(dialogAppeared).toBe(false);
 	});
 

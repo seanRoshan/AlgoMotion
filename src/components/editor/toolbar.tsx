@@ -268,7 +268,10 @@ export function Toolbar() {
 				<Separator orientation="vertical" className="mx-1 h-5" />
 
 				<ToolbarButton icon={Minus} label="Zoom out" shortcut="Ctrl+-" onClick={handleZoomOut} />
-				<span className="min-w-[3rem] text-center text-xs text-muted-foreground">
+				<span
+					data-testid="zoom-level"
+					className="min-w-[3rem] text-center text-xs text-muted-foreground"
+				>
 					{zoomPercent}
 				</span>
 				<ToolbarButton icon={Plus} label="Zoom in" shortcut="Ctrl+=" onClick={handleZoomIn} />
@@ -291,7 +294,12 @@ export function Toolbar() {
 
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs">
+						<Button
+							variant="ghost"
+							size="sm"
+							className="h-7 gap-1 px-2 text-xs"
+							data-testid="speed-selector"
+						>
 							{speed}x
 							<ChevronDown className="h-3 w-3" />
 						</Button>

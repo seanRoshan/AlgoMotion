@@ -40,8 +40,8 @@ test.describe('Authentication', () => {
 		await page.goto('/login');
 		const submitButton = page.getByRole('button', { name: /sign in/i });
 		await submitButton.click();
-		// Form should show validation — either HTML5 or custom error messages
-		await page.waitForTimeout(500);
+		// Form should prevent submission — page should still be on /login
+		await expect(page).toHaveURL(/\/login/);
 	});
 
 	test('login page has link to signup', async ({ page }) => {
