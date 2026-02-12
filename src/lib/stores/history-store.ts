@@ -43,6 +43,7 @@ function extractSceneState(): SceneState {
 		connectionIds: s.connectionIds,
 		selectedIds: s.selectedIds,
 		clipboard: s.clipboard,
+		clipboardConnections: s.clipboardConnections,
 		camera: s.camera,
 	};
 }

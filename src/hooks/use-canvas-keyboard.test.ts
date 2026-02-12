@@ -107,6 +107,39 @@ describe('canvas keyboard shortcuts (store-level)', () => {
 		});
 	});
 
+	it('Ctrl+C copies selected elements', () => {
+		const store = useSceneStore.getState();
+		store.addElement(makeElement({ id: 'el-1' }));
+		store.selectElement('el-1');
+		store.copySelected();
+
+		expect(useSceneStore.getState().clipboard).toHaveLength(1);
+		expect(useSceneStore.getState().clipboard[0]?.id).toBe('el-1');
+	});
+
+	it('Ctrl+V pastes clipboard elements', () => {
+		const store = useSceneStore.getState();
+		store.addElement(makeElement({ id: 'el-1', position: { x: 0, y: 0 } }));
+		store.selectElement('el-1');
+		store.copySelected();
+		store.paste();
+
+		const state = useSceneStore.getState();
+		expect(state.elementIds).toHaveLength(2);
+	});
+
+	it('Ctrl+X cuts selected elements (copy + delete)', () => {
+		const store = useSceneStore.getState();
+		store.addElement(makeElement({ id: 'el-1' }));
+		store.selectElement('el-1');
+		store.cutSelected();
+
+		const state = useSceneStore.getState();
+		expect(state.clipboard).toHaveLength(1);
+		expect(state.elements['el-1']).toBeUndefined();
+		expect(state.elementIds).toHaveLength(0);
+	});
+
 	it('Ctrl+Z undoes the last action', () => {
 		const store = useSceneStore.getState();
 		store.addElement(makeElement({ id: 'el-undo', position: { x: 10, y: 20 } }));
