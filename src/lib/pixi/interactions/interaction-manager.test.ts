@@ -68,6 +68,8 @@ function createMockDeps(overrides: Partial<InteractionDeps> = {}): InteractionDe
 		moveDisplayObject: vi.fn(),
 		rotateDisplayObject: vi.fn(),
 		setCursor: vi.fn(),
+		getSnapEnabled: vi.fn(() => false),
+		getGridSize: vi.fn(() => 8),
 		...overrides,
 	};
 }

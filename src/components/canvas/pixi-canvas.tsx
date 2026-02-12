@@ -66,6 +66,7 @@ export function PixiCanvas() {
 					moveElements: (updates) => store().moveElements(updates),
 					resizeElement: (id, size, pos) => store().resizeElement(id, size, pos),
 					rotateElement: (id, rotation) => store().rotateElement(id, rotation),
+					getSnapEnabled: () => useUIStore.getState().snapToGrid,
 				});
 
 				// Apply initial store state
