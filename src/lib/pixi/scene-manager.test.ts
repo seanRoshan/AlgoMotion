@@ -163,6 +163,20 @@ describe('SceneManager', () => {
 		});
 	});
 
+	describe('setBackgroundColor (before init)', () => {
+		it('does not throw when app is not initialized', () => {
+			const manager = new SceneManager();
+			expect(() => manager.setBackgroundColor(0xffffff)).not.toThrow();
+		});
+	});
+
+	describe('setGridColor (before init)', () => {
+		it('does not throw when app is not initialized', () => {
+			const manager = new SceneManager();
+			expect(() => manager.setGridColor(0xcccccc)).not.toThrow();
+		});
+	});
+
 	describe('destroy (before init)', () => {
 		it('can be called safely without init', () => {
 			const manager = new SceneManager();
