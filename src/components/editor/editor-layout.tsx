@@ -12,6 +12,7 @@ import { useAutoSave } from '@/hooks/use-auto-save';
 import { useGlobalShortcuts } from '@/hooks/use-global-shortcuts';
 import { useThemeSync } from '@/hooks/use-theme-sync';
 import { useUIStore } from '@/lib/stores/ui-store';
+import { CommandPalette } from './command-palette';
 import { Toolbar } from './toolbar';
 
 export function EditorLayout() {
@@ -82,6 +83,7 @@ export function EditorLayout() {
 	return (
 		<div className="flex h-screen flex-col overflow-hidden">
 			<Toolbar />
+			<CommandPalette />
 			<ResizablePanelGroup orientation="horizontal" className="flex-1">
 				<ResizablePanel
 					id="left-panel"

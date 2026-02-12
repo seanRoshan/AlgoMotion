@@ -60,6 +60,7 @@ function getActions(): Record<string, () => void> {
 		'toggle-left-panel': () => useUIStore.getState().togglePanel('left'),
 		'toggle-right-panel': () => useUIStore.getState().togglePanel('right'),
 		'toggle-bottom-panel': () => useUIStore.getState().togglePanel('bottom'),
+		'command-palette': () => useUIStore.getState().toggleCommandPalette(),
 	};
 }
 
