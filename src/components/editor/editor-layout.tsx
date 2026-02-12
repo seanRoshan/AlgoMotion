@@ -8,12 +8,14 @@ import { BottomPanel } from '@/components/panels/bottom-panel';
 import { LeftPanel } from '@/components/panels/left-panel';
 import { RightPanel } from '@/components/panels/right-panel';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { useAutoSave } from '@/hooks/use-auto-save';
 import { useGlobalShortcuts } from '@/hooks/use-global-shortcuts';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { Toolbar } from './toolbar';
 
 export function EditorLayout() {
 	useGlobalShortcuts();
+	useAutoSave();
 
 	const leftRef = usePanelRef();
 	const rightRef = usePanelRef();
