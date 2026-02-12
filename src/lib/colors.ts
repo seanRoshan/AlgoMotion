@@ -54,6 +54,71 @@ export function getSemanticColorNumber(key: SemanticColorKey): number {
 	return hexToNumber(semanticColors[key]);
 }
 
+// ── Theme-Aware Colors ──
+
+/**
+ * Light mode color adjustments.
+ * Most semantic colors are designed for dark canvas backgrounds.
+ * For light mode UI elements, some colors need adjustment for contrast.
+ */
+const lightThemeOverrides: Partial<Record<SemanticColorKey, string>> = {
+	unvisited: '#9ca3af', // gray-400 — darker for light backgrounds
+	visited: '#4b5563', // gray-600 — darker for light backgrounds
+};
+
+/**
+ * Get the semantic color palette for a given theme.
+ * Dark theme uses the default palette; light theme applies contrast adjustments.
+ */
+export function getThemeColors(theme: 'dark' | 'light'): Record<SemanticColorKey, string> {
+	if (theme === 'light') {
+		return { ...semanticColors, ...lightThemeOverrides };
+	}
+	return { ...semanticColors };
+}
+
+/**
+ * Resolve semantic colors with optional user overrides.
+ * Merges theme defaults with any user-provided color overrides.
+ */
+export function resolveSemanticColors(
+	theme: 'dark' | 'light',
+	overrides?: Partial<Record<SemanticColorKey, string>>,
+): Record<SemanticColorKey, string> {
+	const base = getThemeColors(theme);
+	if (!overrides) return base;
+	return { ...base, ...overrides };
+}
+
+// ── Multi-Signal State Indicators ──
+
+/**
+ * State indicator definition.
+ * Per accessibility guidelines (Section 15.5), color must never be the
+ * sole indicator of state — each state also has an icon and/or effect.
+ */
+export interface StateIndicator {
+	colorKey: SemanticColorKey;
+	icon?: 'check' | 'x' | 'arrows' | 'arrow-right' | 'eye' | 'star' | 'dot';
+	effect?: 'pulse' | 'bounce' | 'shake';
+}
+
+/**
+ * Multi-signal indicator mapping for key animation states.
+ * Each state has a color AND at least one other visual cue (icon or effect).
+ */
+export const STATE_INDICATORS: Record<string, StateIndicator> = {
+	sorted: { colorKey: 'sorted', icon: 'check' },
+	error: { colorKey: 'error', icon: 'x', effect: 'shake' },
+	active: { colorKey: 'active', effect: 'pulse' },
+	comparing: { colorKey: 'comparing', icon: 'arrows' },
+	swapping: { colorKey: 'swapping', effect: 'bounce' },
+	visited: { colorKey: 'visited', icon: 'dot' },
+	path: { colorKey: 'path', icon: 'arrow-right' },
+	pivot: { colorKey: 'pivot', icon: 'star' },
+	highlight: { colorKey: 'highlight', effect: 'pulse' },
+};
+
 /**
  * Blend two hex colors by a ratio (0 = first color, 1 = second color).
  */
