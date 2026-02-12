@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { saveProject } from '@/hooks/use-auto-save';
 import { matchesKeyEvent, shortcutRegistry } from '@/lib/shortcuts/shortcut-registry';
 import { useHistoryStore } from '@/lib/stores/history-store';
 import { useSceneStore } from '@/lib/stores/scene-store';
@@ -42,7 +43,7 @@ function getActions(): Record<string, () => void> {
 		undo: () => useHistoryStore.getState().undo(),
 		redo: () => useHistoryStore.getState().redo(),
 		save: () => {
-			// Save is handled elsewhere — this just prevents browser save dialog
+			saveProject();
 		},
 		'zoom-in': () => {
 			const { camera, setCamera } = useSceneStore.getState();
