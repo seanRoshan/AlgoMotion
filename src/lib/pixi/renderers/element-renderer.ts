@@ -1,4 +1,5 @@
 import type { ArrowShape, SceneElement } from '@/types';
+import { ArrayRenderer } from './array-renderer';
 import { calculateArrowheadPoints, hexToPixiColor } from './shared';
 
 /**
@@ -68,9 +69,11 @@ interface PixiModule {
 export class ElementRenderer {
 	private pixi: PixiModule;
 	private displayObjects: Record<string, PixiContainer> = {};
+	private arrayRenderer: ArrayRenderer;
 
 	constructor(pixi: PixiModule) {
 		this.pixi = pixi;
+		this.arrayRenderer = new ArrayRenderer(pixi as never);
 	}
 
 	/**
@@ -78,6 +81,13 @@ export class ElementRenderer {
 	 */
 	getDisplayObject(id: string): PixiContainer | null {
 		return this.displayObjects[id] ?? null;
+	}
+
+	/**
+	 * Get array cell containers for animation targeting.
+	 */
+	getArrayCellContainers(elementId: string): unknown[] | undefined {
+		return this.arrayRenderer.getCellContainers(elementId);
 	}
 
 	/**
@@ -115,6 +125,11 @@ export class ElementRenderer {
 			case 'arrow':
 				this.renderArrow(container, element);
 				break;
+			case 'arrayCell': {
+				const arrayContainer = this.arrayRenderer.render(element);
+				container.addChild(arrayContainer);
+				break;
+			}
 			default:
 				// For unsupported types, render as a rect fallback
 				this.renderRect(container, element);
@@ -153,6 +168,11 @@ export class ElementRenderer {
 			case 'arrow':
 				this.renderArrow(container, element);
 				break;
+			case 'arrayCell': {
+				const arrayContainer = this.arrayRenderer.render(element);
+				container.addChild(arrayContainer);
+				break;
+			}
 			default:
 				this.renderRect(container, element);
 				break;
