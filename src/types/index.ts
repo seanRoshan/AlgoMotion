@@ -50,6 +50,9 @@ export type {
 } from './execution';
 // ── Animation ──
 export type { ActiveGroup, HistoryEntry } from './history';
+// ── Minimap ──
+export type { MinimapBounds, MinimapHit } from './minimap';
+export { MINIMAP_DEFAULTS } from './minimap';
 // ── Project ──
 export type {
 	BackgroundStyle,

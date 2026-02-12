@@ -128,6 +128,34 @@ describe('uiStore', () => {
 		});
 	});
 
+	describe('minimap', () => {
+		it('starts with minimap visible', () => {
+			expect(useUIStore.getState().minimapVisible).toBe(true);
+		});
+
+		it('toggles minimap visibility', () => {
+			useUIStore.getState().toggleMinimap();
+			expect(useUIStore.getState().minimapVisible).toBe(false);
+
+			useUIStore.getState().toggleMinimap();
+			expect(useUIStore.getState().minimapVisible).toBe(true);
+		});
+
+		it('sets minimap visibility directly', () => {
+			useUIStore.getState().setMinimapVisible(false);
+			expect(useUIStore.getState().minimapVisible).toBe(false);
+
+			useUIStore.getState().setMinimapVisible(true);
+			expect(useUIStore.getState().minimapVisible).toBe(true);
+		});
+
+		it('reset restores minimap to visible', () => {
+			useUIStore.getState().setMinimapVisible(false);
+			useUIStore.getState().reset();
+			expect(useUIStore.getState().minimapVisible).toBe(true);
+		});
+	});
+
 	describe('serialization', () => {
 		it('state contains no Map or Set', () => {
 			const state = useUIStore.getState();
