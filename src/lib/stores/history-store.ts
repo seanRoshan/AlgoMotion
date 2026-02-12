@@ -130,6 +130,10 @@ export const useHistoryStore = create<HistoryStore>()(
 			},
 
 			undo: () => {
+				// Auto-commit any active group before undoing
+				const { activeGroup } = get();
+				if (activeGroup) get().endGroup();
+
 				const { cursor, entries } = get();
 				if (cursor <= 0) return;
 
@@ -144,6 +148,10 @@ export const useHistoryStore = create<HistoryStore>()(
 			},
 
 			redo: () => {
+				// Auto-commit any active group before redoing
+				const { activeGroup } = get();
+				if (activeGroup) get().endGroup();
+
 				const { cursor, entries } = get();
 				if (cursor >= entries.length) return;
 
@@ -162,22 +170,25 @@ export const useHistoryStore = create<HistoryStore>()(
 				if (targetIndex === cursor) return;
 				if (targetIndex < 0 || targetIndex > entries.length) return;
 
+				// Accumulate all patches and apply in a single batch
+				const allPatches: Patch[] = [];
+
 				if (targetIndex < cursor) {
 					for (let i = cursor - 1; i >= targetIndex; i--) {
 						const entry = entries[i];
-						if (!entry) continue;
-						const snapshot = extractSceneState();
-						const newState = applyPatches(snapshot, entry.inversePatches);
-						useSceneStore.setState(newState);
+						if (entry) allPatches.push(...entry.inversePatches);
 					}
 				} else {
 					for (let i = cursor; i < targetIndex; i++) {
 						const entry = entries[i];
-						if (!entry) continue;
-						const snapshot = extractSceneState();
-						const newState = applyPatches(snapshot, entry.patches);
-						useSceneStore.setState(newState);
+						if (entry) allPatches.push(...entry.patches);
 					}
+				}
+
+				if (allPatches.length > 0) {
+					const snapshot = extractSceneState();
+					const newState = applyPatches(snapshot, allPatches);
+					useSceneStore.setState(newState);
 				}
 
 				set({ cursor: targetIndex });
