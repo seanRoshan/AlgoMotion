@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
 	blendColors,
 	getSemanticColorNumber,
+	getThemeColors,
 	hexToNumber,
 	numberToHex,
+	resolveSemanticColors,
 	SEMANTIC_COLOR_KEYS,
+	STATE_INDICATORS,
 	semanticColors,
 } from './colors';
 
@@ -109,5 +112,77 @@ describe('blendColors', () => {
 
 	it('clamps ratio above 1', () => {
 		expect(blendColors('#ff0000', '#0000ff', 2)).toBe('#0000ff');
+	});
+});
+
+describe('getThemeColors', () => {
+	it('returns dark theme colors by default', () => {
+		const colors = getThemeColors('dark');
+		expect(colors.active).toBe(semanticColors.active);
+		expect(colors.sorted).toBe(semanticColors.sorted);
+	});
+
+	it('returns light theme colors with adjusted values', () => {
+		const colors = getThemeColors('light');
+		// Light theme should have all 10 keys
+		expect(Object.keys(colors)).toHaveLength(10);
+		// Light theme adjusts unvisited for darker background contrast
+		expect(colors.unvisited).not.toBe(semanticColors.unvisited);
+	});
+
+	it('returns all 10 semantic color keys for both themes', () => {
+		const dark = getThemeColors('dark');
+		const light = getThemeColors('light');
+		for (const key of SEMANTIC_COLOR_KEYS) {
+			expect(dark[key]).toBeDefined();
+			expect(light[key]).toBeDefined();
+		}
+	});
+});
+
+describe('resolveSemanticColors', () => {
+	it('returns default colors when no overrides provided', () => {
+		const resolved = resolveSemanticColors('dark');
+		expect(resolved.active).toBe(semanticColors.active);
+	});
+
+	it('merges user overrides with defaults', () => {
+		const resolved = resolveSemanticColors('dark', { active: '#ff0000' });
+		expect(resolved.active).toBe('#ff0000');
+		expect(resolved.sorted).toBe(semanticColors.sorted);
+	});
+
+	it('preserves all keys even when overriding some', () => {
+		const resolved = resolveSemanticColors('dark', { error: '#cc0000' });
+		expect(Object.keys(resolved)).toHaveLength(10);
+		expect(resolved.error).toBe('#cc0000');
+	});
+});
+
+describe('STATE_INDICATORS', () => {
+	it('defines multi-signal indicators for key states', () => {
+		expect(STATE_INDICATORS.sorted).toBeDefined();
+		expect(STATE_INDICATORS.sorted.colorKey).toBe('sorted');
+		expect(STATE_INDICATORS.sorted.icon).toBe('check');
+
+		expect(STATE_INDICATORS.error).toBeDefined();
+		expect(STATE_INDICATORS.error.colorKey).toBe('error');
+		expect(STATE_INDICATORS.error.icon).toBe('x');
+	});
+
+	it('includes indicator for active state with pulse effect', () => {
+		expect(STATE_INDICATORS.active.colorKey).toBe('active');
+		expect(STATE_INDICATORS.active.effect).toBe('pulse');
+	});
+
+	it('includes indicator for comparing state', () => {
+		expect(STATE_INDICATORS.comparing.colorKey).toBe('comparing');
+		expect(STATE_INDICATORS.comparing.icon).toBe('arrows');
+	});
+
+	it('all indicators have a colorKey', () => {
+		for (const indicator of Object.values(STATE_INDICATORS)) {
+			expect(indicator.colorKey).toBeDefined();
+		}
 	});
 });
