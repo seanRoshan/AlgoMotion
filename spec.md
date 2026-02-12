@@ -42,54 +42,63 @@ AlgoMotion fills the gap: **a real-time, browser-based animation studio with bot
 
 | Layer | Technology | Version | Rationale |
 |---|---|---|---|
-| **Framework** | Next.js (App Router) | 15.x | RSC, streaming, server actions, image optimization, API routes |
-| **Language** | TypeScript | 5.7+ | Strict mode, satisfies operator, decorator metadata |
-| **UI Components** | shadcn/ui + Radix UI | Latest | Copy-paste ownership, accessible primitives, Tailwind-native |
-| **Styling** | Tailwind CSS | 4.x | Oxide engine, zero-config content detection, CSS-first config |
-| **Animation Engine** | Motion (Framer Motion) | 12.x | Declarative React animations, layout animations, AnimatePresence |
-| **Canvas Rendering** | Pixi.js | 8.x | High-performance 2D WebGPU/WebGL renderer, 60fps scene graph |
-| **Canvas React Bindings** | @pixi/react | 8.x | React reconciler for Pixi.js — declarative canvas components |
-| **Code Editor** | Monaco Editor | 0.52+ | VS Code engine, syntax highlighting, IntelliSense, diff view |
-| **State Management** | Zustand | 5.x | Minimal, performant, middleware (immer, persist, devtools) |
-| **Timeline/Sequencing** | GSAP (GreenSock) | 3.12+ | Timeline-based sequencing, ScrollTrigger, precision easing |
+| **Framework** | Next.js (App Router) | 16.x | RSC, React 19.2, React Compiler stable, Build Adapters API, Turbopack stable |
+| **Language** | TypeScript | 5.9+ | Strict mode, satisfies operator, decorator metadata (TS 6.0 bridge release imminent) |
+| **UI Components** | shadcn/ui + Radix UI | Latest | Copy-paste ownership, accessible primitives, unified `radix-ui` package, Tailwind-native |
+| **Styling** | Tailwind CSS | 4.1 | Oxide engine, zero-config content detection, CSS-first config, text-shadow & mask utilities |
+| **Canvas Rendering** | Pixi.js | 8.x (8.16+) | High-performance 2D WebGPU/WebGL/Canvas2D renderer, 60fps scene graph |
+| **Canvas Integration** | Imperative API | — | Direct Pixi.js scene graph management (no @pixi/react reconciler — better performance at scale) |
+| **Code Editor** | Monaco Editor | 0.55+ | VS Code engine, syntax highlighting, IntelliSense, diff view |
+| **State Management** | Zustand | 5.x (5.0+) | Minimal, performant, middleware (immer, persist, devtools) |
+| **Timeline/Sequencing** | GSAP (GreenSock) | 3.14+ | Timeline sequencing, all plugins free (Webflow acquisition), precision easing |
 | **Math Rendering** | KaTeX | 0.16+ | Fast LaTeX rendering, server-side compatible |
-| **Graph Layout** | Dagre / ELK.js | Latest | Automatic directed graph layout, hierarchical positioning |
-| **Persistence** | IndexedDB (Dexie.js) | 4.x | Client-side project storage, offline-first |
-| **Cloud Storage** | Supabase (PostgreSQL + S3) | Latest | Auth, database, file storage, real-time subscriptions |
-| **Auth** | Supabase Auth (or Zitadel) | Latest | OAuth, magic link, zero recurring cost (Zitadel self-hosted) |
+| **Graph Layout** | ELK.js | 0.11+ | Eclipse Layout Kernel — layered, force-directed, radial layouts (actively maintained) |
+| **DSL Parser** | Peggy.js | 5.x | PEG parser generator, compiles DSL to GSAP timelines |
+| **Persistence** | IndexedDB (Dexie.js) | 4.x (4.3+) | Client-side project storage, offline-first |
+| **Cloud DB** | Supabase PostgreSQL | Latest | Database with RLS, real-time subscriptions, PostgREST v14 |
+| **Cloud Storage** | Supabase Storage | Latest | File storage with resumable uploads (TUS), Smart CDN, image transforms, signed URLs |
+| **Auth** | Supabase Auth (`@supabase/ssr`) | Latest | OAuth, magic link, email/password, cookie-based SSR sessions, RLS integration |
 | **Video Export** | FFmpeg.wasm | 0.12+ | Client-side video encoding, no server dependency |
-| **Testing** | Vitest + Playwright | Latest | Unit/integration testing + E2E browser testing |
-| **Package Manager** | pnpm | 9.x | Fast, strict, disk-efficient |
-| **Linting** | Biome | 1.9+ | Fast linter + formatter replacing ESLint + Prettier |
+| **GIF Export** | modern-gif | 2.x | Fast browser-side GIF encoding (replaces unmaintained gif.js) |
+| **ID Generation** | nanoid | 5.x | Tiny (118 bytes), secure, URL-friendly unique IDs |
+| **Testing** | Vitest + Playwright | 4.x / 1.58+ | Unit/integration testing + E2E browser testing |
+| **Package Manager** | pnpm | 10.x | Fast, strict, disk-efficient |
+| **Linting** | Biome | 2.3+ | Fast linter + formatter, 434 rules, type-aware linting |
+| **Monitoring** | Sentry + Vercel Analytics | Latest | Error tracking + session replay + Web Vitals + traffic analytics |
+| **Feature Flags** | Vercel Flags SDK | Latest | Flags as code, Toolbar integration, phased rollouts |
+| **Hosting** | Vercel | Latest | Next.js optimized, edge functions, ISR, preview deployments |
 
 ---
 
 ## 5. Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Next.js App Shell                            │
-│  ┌───────────┐  ┌──────────────┐  ┌──────────┐  ┌───────────────┐  │
-│  │  Toolbar   │  │  Scene Panel │  │ Timeline │  │  Properties   │  │
-│  │  & Menus   │  │  (Pixi.js)   │  │ Scrubber │  │  Inspector    │  │
-│  └───────────┘  └──────────────┘  └──────────┘  └───────────────┘  │
-│  ┌───────────────────────────┐  ┌────────────────────────────────┐  │
-│  │  Code Editor (Monaco)     │  │  Animation Script Engine       │  │
-│  │  - Algorithm source code  │  │  - Declarative DSL interpreter │  │
-│  │  - Line-by-line highlight │  │  - GSAP timeline orchestration │  │
-│  └───────────────────────────┘  └────────────────────────────────┘  │
-│  ┌────────────────────────────────────────────────────────────────┐  │
-│  │                    Zustand Store                                │  │
-│  │  scene[] ← elements, connections, annotations                  │  │
-│  │  timeline ← keyframes, duration, playback state                │  │
-│  │  execution ← call stack, variables, current line               │  │
-│  └────────────────────────────────────────────────────────────────┘  │
-│  ┌────────────────────────────────────────────────────────────────┐  │
-│  │              Persistence Layer                                  │  │
-│  │  IndexedDB (local) ↔ Supabase (cloud sync)                    │  │
-│  └────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
+┌─ React (UI Chrome) ──────────────────────────────────────────────────┐
+│  Toolbar, Panels, Inspector, Command Palette                         │
+│  (shadcn/ui + Tailwind CSS — only renders UI, not per-frame canvas)  │
+└──────────────────────────┬───────────────────────────────────────────┘
+                           │ reads/writes
+┌──────────────────────────▼───────────────────────────────────────────┐
+│  Zustand Stores (Single Source of Truth)                              │
+│  scene.ts | timeline.ts | execution.ts | ui.ts | project.ts          │
+│  Middleware: immer (undo/redo) + persist (IndexedDB) + devtools      │
+└──────┬──────────────────────┬──────────────────┬─────────────────────┘
+       │                      │                  │
+┌──────▼───────────┐  ┌───────▼────────┐  ┌─────▼──────────────────┐
+│ Pixi.js          │  │ GSAP           │  │ Web Workers            │
+│ SceneManager     │  │ TimelineManager│  │ - Code Executor        │
+│ (imperative API) │◄►│ (plays/pauses) │  │ - DSL Parser (Peggy)   │
+│                  │  │                │  │ - Video Encoder (FFmpeg)│
+└──────────────────┘  └────────────────┘  └────────────────────────┘
+       │
+┌──────▼───────────────────────────────────────────────────────────────┐
+│  Persistence Layer                                                    │
+│  IndexedDB (Dexie.js, offline-first) ↔ Supabase (cloud sync)        │
+│  Auth: @supabase/ssr | Storage: Supabase Storage (TUS, CDN, signed) │
+└───────────────────────────────────────────────────────────────────────┘
 ```
+
+**Key architectural decision:** React handles UI chrome only (toolbar, panels, inspector). The Pixi.js canvas is managed via an imperative `SceneManager` class that subscribes to Zustand store changes — no React reconciler for the canvas. During animation playback, GSAP manipulates Pixi.js objects directly for 60fps performance, writing back to Zustand only on pause/stop.
 
 ### 5.1 Module Decomposition
 
@@ -763,7 +772,7 @@ const arraySwapPreset = {
 
 **Optimization Strategies:**
 
-- **Code splitting:** Monaco Editor, FFmpeg.wasm, and GSAP loaded on demand via `next/dynamic`
+- **Code splitting:** Monaco Editor (~5MB), FFmpeg.wasm (~25MB) loaded on demand via `next/dynamic`; GSAP core loaded eagerly (small footprint)
 - **Canvas optimization:** Pixi.js container culling (off-screen elements not rendered), object pooling for frequently created/destroyed elements
 - **Web Workers:** Code execution engine, DSL parser, and video encoding all run in workers
 - **Virtualization:** Timeline track and element library use virtual scrolling for large lists
@@ -800,12 +809,15 @@ const arraySwapPreset = {
 
 ## 13. Deployment & Infrastructure
 
-- **Hosting:** Vercel (Next.js optimized, edge functions, ISR)
-- **Database:** Supabase (managed PostgreSQL, auth, storage)
-- **CDN:** Vercel Edge Network + Supabase Storage CDN for assets
-- **CI/CD:** GitHub Actions → lint (Biome) → test (Vitest + Playwright) → build → deploy (Vercel)
-- **Monitoring:** Vercel Analytics + Sentry for error tracking
-- **Feature Flags:** Vercel Flags (or PostHog) for gradual rollout
+- **Hosting:** Vercel (Next.js 16 optimized, edge functions, ISR, Turbopack, preview deployments)
+- **Database:** Supabase PostgreSQL (managed, PostgREST v14, RLS, real-time subscriptions)
+- **Auth:** Supabase Auth via `@supabase/ssr` (OAuth, magic link, email/password, cookie-based SSR sessions)
+- **File Storage:** Supabase Storage (resumable TUS uploads, Smart CDN, image transforms, signed URLs for sharing)
+- **CDN:** Vercel Edge Network (static assets) + Supabase Smart CDN (user uploads, exported videos)
+- **CI/CD:** GitHub Actions → lint (Biome 2.3) → test (Vitest 4.x + Playwright 1.58) → build → deploy (Vercel)
+- **Error Tracking:** Sentry (via Vercel Marketplace — error tracking, performance tracing, session replay)
+- **Analytics:** Vercel Web Analytics (traffic) + Vercel Speed Insights (Core Web Vitals / RUM)
+- **Feature Flags:** Vercel Flags SDK (flags as code, Toolbar integration, phased rollouts)
 
 ---
 
@@ -813,12 +825,13 @@ const arraySwapPreset = {
 
 ### Phase 1 — Foundation (Weeks 1–4)
 
-- Next.js project scaffold with App Router, Tailwind 4, shadcn/ui
-- Pixi.js canvas workspace with pan, zoom, grid, element rendering
+- Next.js 16 project scaffold with App Router, Tailwind CSS 4.1, shadcn/ui, Biome 2.3, pnpm 10
+- Pixi.js 8.16+ canvas workspace with imperative SceneManager, pan, zoom, grid, element rendering
 - Basic primitives: node, edge, rect, text, arrow
-- Zustand stores for scene, UI, project state
-- Save/load to IndexedDB
+- Zustand 5.x stores for scene, UI, project state (using Record<> not Map<> for serialization)
+- Save/load to IndexedDB via Dexie.js 4.3
 - Dark mode UI shell with toolbar, panels, command palette
+- Sentry + Vercel Analytics integration from day one
 
 ### Phase 2 — Data Structure Composites (Weeks 5–8)
 
@@ -831,8 +844,8 @@ const arraySwapPreset = {
 
 ### Phase 3 — Code Editor & Execution (Weeks 9–12)
 
-- Monaco Editor integration with language support
-- Web Worker-based execution engine
+- Monaco Editor 0.55+ integration with language support (lazy-loaded via `next/dynamic`)
+- Web Worker-based execution engine (sandboxed, no eval)
 - Line-by-line code highlighting synced to animations
 - Variable watch panel and call stack display
 - Breakpoint support
@@ -842,18 +855,19 @@ const arraySwapPreset = {
 
 - CPU datapath, pipeline, cache, memory hierarchy composites
 - Architecture animation presets
-- DSL parser and editor (Peggy.js)
-- Auto-layout engine (Dagre, force-directed)
+- DSL parser and editor (Peggy.js 5.x)
+- Auto-layout engine (ELK.js, force-directed)
 - Advanced tree composites (AVL, Red-Black, Heap, Trie)
 - Math composites (coordinate plane, matrix, vectors)
 
 ### Phase 5 — Export & Polish (Weeks 17–20)
 
-- FFmpeg.wasm video export (MP4, WebM)
-- GIF export, PNG sequence, SVG snapshot
+- FFmpeg.wasm 0.12+ video export (MP4, WebM) — lazy-loaded
+- GIF export (modern-gif 2.x), PNG sequence, SVG snapshot
 - Interactive HTML embed export
-- Supabase cloud sync and auth
+- Supabase Auth (`@supabase/ssr`) + cloud sync + Storage (resumable TUS uploads, signed URLs)
 - Public sharing and embed player
+- Vercel Flags SDK for feature gating
 - Performance optimization pass
 - Accessibility audit and fixes
 - 20 additional templates across all categories
@@ -909,7 +923,7 @@ const arraySwapPreset = {
 
 - FFmpeg.wasm is heavy (~25MB). It **must** be loaded on demand only when the user clicks "Export to Video." Use `next/dynamic` with a loading skeleton.
 - Monaco Editor is also heavy (~5MB). Lazy-load it and show a simple `<textarea>` placeholder during load.
-- Pixi.js WebGPU renderer is optimal but **must fall back to WebGL2 → Canvas2D** gracefully on older browsers. Test on Safari 17+ which has partial WebGPU.
+- Pixi.js 8.16+ WebGPU renderer is optimal but **must fall back to WebGL2 → Canvas2D** gracefully on older browsers. Pixi.js 8.16 includes an experimental Canvas2D renderer for environments without GPU context. Test on Safari 17+ which has partial WebGPU.
 - Object pooling for Pixi.js sprites is non-negotiable for any scene with >100 elements. Reuse sprites instead of creating/destroying.
 - The animation engine should use **GSAP's ticker** instead of `requestAnimationFrame` directly to ensure consistent timing with the timeline.
 - State updates during animation playback should be batched — don't trigger React re-renders for every tweened property. Use GSAP's direct DOM/Pixi manipulation with React only for UI chrome updates.
