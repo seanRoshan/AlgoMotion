@@ -156,6 +156,33 @@ describe('timelineStore', () => {
 			useTimelineStore.getState().toggleLoop();
 			expect(useTimelineStore.getState().playback.loop).toBe(false);
 		});
+
+		it('setStatus to completed preserves currentTime', () => {
+			useTimelineStore.getState().setDuration(10);
+			useTimelineStore.getState().seek(10);
+			useTimelineStore.getState().setStatus('completed');
+			expect(useTimelineStore.getState().playback.status).toBe('completed');
+			expect(useTimelineStore.getState().playback.currentTime).toBe(10);
+		});
+
+		it('stop resets time but completed does not', () => {
+			useTimelineStore.getState().setDuration(10);
+			useTimelineStore.getState().seek(8);
+
+			// Completed should keep currentTime
+			useTimelineStore.getState().setStatus('completed');
+			expect(useTimelineStore.getState().playback.currentTime).toBe(8);
+
+			// Stop should reset to 0
+			useTimelineStore.getState().stop();
+			expect(useTimelineStore.getState().playback.currentTime).toBe(0);
+		});
+
+		it('play from completed state starts from beginning', () => {
+			useTimelineStore.getState().setStatus('completed');
+			useTimelineStore.getState().play();
+			expect(useTimelineStore.getState().playback.status).toBe('playing');
+		});
 	});
 
 	describe('serialization', () => {

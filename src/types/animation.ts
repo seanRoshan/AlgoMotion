@@ -5,7 +5,7 @@ import type { JsonValue } from './common';
  *
  * Spec reference: Section 6.4
  */
-export type PlaybackStatus = 'idle' | 'playing' | 'paused' | 'stopped';
+export type PlaybackStatus = 'idle' | 'playing' | 'paused' | 'stopped' | 'completed';
 
 /**
  * Playback speed multiplier.

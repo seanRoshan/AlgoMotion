@@ -19,6 +19,7 @@ const STATUS_MESSAGES: Record<PlaybackStatus, string> = {
 	playing: 'Animation playing',
 	paused: 'Animation paused',
 	stopped: 'Animation stopped',
+	completed: 'Animation completed',
 };
 
 export function usePlaybackAnnouncer(): void {
