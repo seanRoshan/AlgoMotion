@@ -2,6 +2,8 @@ import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import { ScreenReaderAnnouncer } from '@/components/a11y/screen-reader-announcer';
+import { SkipToContent } from '@/components/a11y/skip-to-content';
 import { Providers } from '@/components/shared/providers';
 import './globals.css';
 
@@ -29,7 +31,11 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-				<Providers>{children}</Providers>
+				<SkipToContent />
+				<Providers>
+					<ScreenReaderAnnouncer />
+					{children}
+				</Providers>
 				<Analytics />
 				<SpeedInsights />
 			</body>
