@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { CameraState, Connection, SceneElement } from '@/types';
+import type { CameraState, Connection, Position, SceneElement, Size } from '@/types';
 import { dexieStorage } from './dexie-storage';
 
 export interface SceneState {
@@ -28,6 +28,13 @@ export interface SceneActions {
 	copySelected: () => void;
 	paste: (offsetX?: number, offsetY?: number) => SceneElement[];
 	setCamera: (camera: Partial<CameraState>) => void;
+	selectAll: () => void;
+	deleteSelected: () => void;
+	duplicateSelected: () => void;
+	nudgeSelected: (dx: number, dy: number) => void;
+	moveElements: (updates: Record<string, Position>) => void;
+	resizeElement: (id: string, size: Size, position: Position) => void;
+	rotateElement: (id: string, rotation: number) => void;
 	reset: () => void;
 }
 
@@ -160,6 +167,96 @@ export const useSceneStore = create<SceneStore>()(
 				setCamera: (camera) =>
 					set((state) => {
 						Object.assign(state.camera, camera);
+					}),
+
+				selectAll: () =>
+					set((state) => {
+						state.selectedIds = state.elementIds.filter((id) => !state.elements[id]?.locked);
+					}),
+
+				deleteSelected: () =>
+					set((state) => {
+						const idsToDelete = [...state.selectedIds];
+						for (const id of idsToDelete) {
+							delete state.elements[id];
+							state.elementIds = state.elementIds.filter((eid) => eid !== id);
+							// Remove connections attached to this element
+							state.connectionIds = state.connectionIds.filter((cid) => {
+								const conn = state.connections[cid];
+								if (conn && (conn.fromElementId === id || conn.toElementId === id)) {
+									delete state.connections[cid];
+									return false;
+								}
+								return true;
+							});
+						}
+						state.selectedIds = [];
+					}),
+
+				duplicateSelected: () => {
+					const { selectedIds, elements } = get();
+					if (selectedIds.length === 0) return;
+					const newIds: string[] = [];
+					const timestamp = Date.now();
+					set((state) => {
+						for (let i = 0; i < selectedIds.length; i++) {
+							const origId = selectedIds[i];
+							if (!origId) continue;
+							const orig = elements[origId];
+							if (!orig) continue;
+							const newId = `${origId}-dup-${timestamp}-${i}`;
+							const newEl: SceneElement = {
+								...orig,
+								id: newId,
+								position: {
+									x: orig.position.x + 20,
+									y: orig.position.y + 20,
+								},
+							};
+							state.elements[newId] = newEl;
+							state.elementIds.push(newId);
+							newIds.push(newId);
+						}
+						state.selectedIds = newIds;
+					});
+				},
+
+				nudgeSelected: (dx, dy) =>
+					set((state) => {
+						for (const id of state.selectedIds) {
+							const el = state.elements[id];
+							if (el) {
+								el.position.x += dx;
+								el.position.y += dy;
+							}
+						}
+					}),
+
+				moveElements: (updates) =>
+					set((state) => {
+						for (const [id, pos] of Object.entries(updates)) {
+							const el = state.elements[id];
+							if (el) {
+								el.position = { ...pos };
+							}
+						}
+					}),
+
+				resizeElement: (id, size, position) =>
+					set((state) => {
+						const el = state.elements[id];
+						if (el) {
+							el.size = { ...size };
+							el.position = { ...position };
+						}
+					}),
+
+				rotateElement: (id, rotation) =>
+					set((state) => {
+						const el = state.elements[id];
+						if (el) {
+							el.rotation = rotation;
+						}
 					}),
 
 				reset: () => set(initialState),

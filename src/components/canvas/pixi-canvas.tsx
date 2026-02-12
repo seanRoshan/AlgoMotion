@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useCanvasKeyboard } from '@/hooks/use-canvas-keyboard';
 import { SceneManager } from '@/lib/pixi/scene-manager';
 import { useSceneStore } from '@/lib/stores/scene-store';
 import { useUIStore } from '@/lib/stores/ui-store';
@@ -18,6 +19,13 @@ import { useUIStore } from '@/lib/stores/ui-store';
 export function PixiCanvas() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const managerRef = useRef<SceneManager | null>(null);
+
+	// Refresh selection overlay after keyboard-driven changes
+	const handleSelectionChange = useCallback(() => {
+		managerRef.current?.getInteractionManager()?.refreshSelection();
+	}, []);
+
+	useCanvasKeyboard(containerRef, handleSelectionChange);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -45,8 +53,23 @@ export function PixiCanvas() {
 					isSyncingCamera = false;
 				});
 
+				// Wire up interaction system with store dependencies
+				const store = useSceneStore.getState;
+				manager.initInteractions({
+					getElements: () => store().elements,
+					getElementIds: () => store().elementIds,
+					getSelectedIds: () => store().selectedIds,
+					selectElement: (id) => store().selectElement(id),
+					deselectAll: () => store().deselectAll(),
+					selectMultiple: (ids) => store().selectMultiple(ids),
+					toggleSelection: (id) => store().toggleSelection(id),
+					moveElements: (updates) => store().moveElements(updates),
+					resizeElement: (id, size, pos) => store().resizeElement(id, size, pos),
+					rotateElement: (id, rotation) => store().rotateElement(id, rotation),
+				});
+
 				// Apply initial store state
-				const { camera, elements, elementIds } = useSceneStore.getState();
+				const { camera, elements, elementIds } = store();
 				manager.setCamera(camera);
 				manager.syncElements(elements, elementIds);
 
@@ -64,6 +87,7 @@ export function PixiCanvas() {
 			if (state.elementIds !== prevElementIds) {
 				prevElementIds = state.elementIds;
 				mgr.syncElements(state.elements, state.elementIds);
+				mgr.getInteractionManager()?.refreshSelection();
 				return;
 			}
 
@@ -74,6 +98,7 @@ export function PixiCanvas() {
 					mgr.updateElement(element);
 				}
 			}
+			mgr.getInteractionManager()?.refreshSelection();
 		});
 
 		// Subscribe to grid visibility changes
@@ -112,9 +137,10 @@ export function PixiCanvas() {
 	}, []);
 
 	return (
-		<main
+		<div
 			ref={containerRef}
 			className="relative h-full w-full overflow-hidden"
+			role="application"
 			aria-label="Canvas workspace"
 		/>
 	);

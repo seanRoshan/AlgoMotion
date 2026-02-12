@@ -1,9 +1,29 @@
 import type { Application, Container, ContainerChild } from 'pixi.js';
-import type { CameraState, SceneElement } from '@/types';
+import type { CameraState, Position, SceneElement, Size } from '@/types';
 import { GridRenderer } from './grid-renderer';
+import type { InteractionDeps } from './interactions/interaction-manager';
+import { InteractionManager } from './interactions/interaction-manager';
+import { SelectionRenderer } from './interactions/selection-renderer';
 import { ElementRenderer } from './renderers/element-renderer';
 
 export type BackgroundMode = 'dots' | 'lines' | 'none';
+
+/**
+ * Store-side dependencies for interaction handling.
+ * Provided by the React wrapper (PixiCanvas) after initialization.
+ */
+export interface InteractionStoreDeps {
+	getElements: () => Record<string, SceneElement>;
+	getElementIds: () => string[];
+	getSelectedIds: () => string[];
+	selectElement: (id: string) => void;
+	deselectAll: () => void;
+	selectMultiple: (ids: string[]) => void;
+	toggleSelection: (id: string) => void;
+	moveElements: (updates: Record<string, Position>) => void;
+	resizeElement: (id: string, size: Size, position: Position) => void;
+	rotateElement: (id: string, rotation: number) => void;
+}
 
 export interface SceneManagerOptions {
 	container: HTMLElement;
@@ -33,6 +53,8 @@ export class SceneManager {
 	private selectionLayer: Container | null = null;
 	private gridRenderer: GridRenderer | null = null;
 	private elementRenderer: ElementRenderer | null = null;
+	private interactionManager: InteractionManager | null = null;
+	private selectionRenderer: SelectionRenderer | null = null;
 	private resizeObserver: ResizeObserver | null = null;
 
 	private _camera: CameraState = { x: 0, y: 0, zoom: 1 };
@@ -119,6 +141,12 @@ export class SceneManager {
 			Text,
 			TextStyle,
 		} as unknown as ConstructorParameters<typeof ElementRenderer>[0]);
+
+		// Initialize selection renderer for interaction overlays
+		this.selectionRenderer = new SelectionRenderer(
+			{ Graphics } as unknown as ConstructorParameters<typeof SelectionRenderer>[0],
+			this.selectionLayer as unknown as ConstructorParameters<typeof SelectionRenderer>[1],
+		);
 
 		// Apply initial camera
 		this.applyCamera();
@@ -240,6 +268,53 @@ export class SceneManager {
 		}
 	}
 
+	// ── Interaction Management ──
+
+	/**
+	 * Initialize the interaction system with store dependencies.
+	 * Must be called after init() and before user interactions.
+	 */
+	initInteractions(storeDeps: InteractionStoreDeps): void {
+		if (!this.selectionRenderer) return;
+
+		const deps: InteractionDeps = {
+			...storeDeps,
+			getCameraZoom: () => this._camera.zoom,
+			screenToWorld: (sx, sy) => this.screenToWorld(sx, sy),
+			getContainerRect: () => this.container?.getBoundingClientRect() ?? null,
+			moveDisplayObject: (id, worldX, worldY) => {
+				const obj = this.elementRenderer?.getDisplayObject(id);
+				if (obj) {
+					// Access the real Pixi.js Container's position
+					(obj as unknown as { position: { set: (x: number, y: number) => void } }).position.set(
+						worldX,
+						worldY,
+					);
+				}
+			},
+			rotateDisplayObject: (id, radians) => {
+				const obj = this.elementRenderer?.getDisplayObject(id);
+				if (obj) {
+					(obj as unknown as { rotation: number }).rotation = radians;
+				}
+			},
+			setCursor: (cursor) => {
+				if (this.container) {
+					this.container.style.cursor = cursor;
+				}
+			},
+		};
+
+		this.interactionManager = new InteractionManager(deps, this.selectionRenderer);
+	}
+
+	/**
+	 * Get the interaction manager (for external refresh calls).
+	 */
+	getInteractionManager(): InteractionManager | null {
+		return this.interactionManager;
+	}
+
 	/**
 	 * Convert screen coordinates to world coordinates.
 	 */
@@ -281,6 +356,10 @@ export class SceneManager {
 	destroy(): void {
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
+
+		this.interactionManager?.destroy();
+		this.interactionManager = null;
+		this.selectionRenderer = null;
 
 		this.elementRenderer?.destroyAll();
 		this.elementRenderer = null;
@@ -391,31 +470,43 @@ export class SceneManager {
 	}
 
 	private onPointerDown(e: PointerEvent): void {
-		// Middle-click or Space+click for panning
+		// Middle-click for panning
 		if (e.button === 1) {
 			e.preventDefault();
 			this.startPan(e);
+			return;
+		}
+
+		// Left-click → delegate to interaction manager
+		if (e.button === 0 && this.interactionManager) {
+			this.interactionManager.onPointerDown(e);
 		}
 	}
 
 	private onPointerMove(e: PointerEvent): void {
-		if (!this.isPanning) return;
+		if (this.isPanning) {
+			const dx = e.clientX - this.panStartX;
+			const dy = e.clientY - this.panStartY;
 
-		const dx = e.clientX - this.panStartX;
-		const dy = e.clientY - this.panStartY;
+			this._camera.x = this.cameraStartX + dx;
+			this._camera.y = this.cameraStartY + dy;
 
-		this._camera.x = this.cameraStartX + dx;
-		this._camera.y = this.cameraStartY + dy;
+			this.applyCamera();
+			this.renderGrid();
+			this.onCameraChange?.({ ...this._camera });
+			return;
+		}
 
-		this.applyCamera();
-		this.renderGrid();
-		this.onCameraChange?.({ ...this._camera });
+		this.interactionManager?.onPointerMove(e);
 	}
 
-	private onPointerUp(_e: PointerEvent): void {
+	private onPointerUp(e: PointerEvent): void {
 		if (this.isPanning) {
 			this.isPanning = false;
+			return;
 		}
+
+		this.interactionManager?.onPointerUp(e);
 	}
 
 	/**
