@@ -256,6 +256,104 @@ describe('sceneStore', () => {
 			expect(state.elementIds).toHaveLength(4);
 			expect(new Set(state.elementIds).size).toBe(4);
 		});
+
+		it('auto-selects pasted elements', () => {
+			useSceneStore.getState().addElement(makeElement('el-1'));
+			useSceneStore.getState().selectElement('el-1');
+			useSceneStore.getState().copySelected();
+			useSceneStore.getState().paste();
+
+			const { selectedIds, elementIds } = useSceneStore.getState();
+			// Only pasted elements should be selected, not the original
+			expect(selectedIds).toHaveLength(1);
+			expect(selectedIds[0]).not.toBe('el-1');
+			expect(elementIds).toContain(selectedIds[0]);
+		});
+
+		it('copies connections between selected elements', () => {
+			useSceneStore.getState().addElement(makeElement('el-1'));
+			useSceneStore.getState().addElement(makeElement('el-2'));
+			useSceneStore.getState().addConnection(makeConnection('conn-1', 'el-1', 'el-2'));
+			useSceneStore.getState().selectMultiple(['el-1', 'el-2']);
+			useSceneStore.getState().copySelected();
+
+			expect(useSceneStore.getState().clipboardConnections).toHaveLength(1);
+			expect(useSceneStore.getState().clipboardConnections[0]?.id).toBe('conn-1');
+		});
+
+		it('does not copy connections when only one endpoint is selected', () => {
+			useSceneStore.getState().addElement(makeElement('el-1'));
+			useSceneStore.getState().addElement(makeElement('el-2'));
+			useSceneStore.getState().addConnection(makeConnection('conn-1', 'el-1', 'el-2'));
+			useSceneStore.getState().selectElement('el-1');
+			useSceneStore.getState().copySelected();
+
+			expect(useSceneStore.getState().clipboardConnections).toHaveLength(0);
+		});
+
+		it('pastes connections with remapped element IDs', () => {
+			useSceneStore.getState().addElement(makeElement('el-1'));
+			useSceneStore.getState().addElement(makeElement('el-2'));
+			useSceneStore.getState().addConnection(makeConnection('conn-1', 'el-1', 'el-2'));
+			useSceneStore.getState().selectMultiple(['el-1', 'el-2']);
+			useSceneStore.getState().copySelected();
+			useSceneStore.getState().paste();
+
+			const state = useSceneStore.getState();
+			// Original + pasted
+			expect(state.connectionIds).toHaveLength(2);
+
+			// Pasted connection should reference the new element IDs, not the originals
+			const pastedConnId = state.connectionIds.find((id) => id !== 'conn-1');
+			expect(pastedConnId).toBeDefined();
+			const pastedConn = pastedConnId ? state.connections[pastedConnId] : undefined;
+			expect(pastedConn).toBeDefined();
+			expect(pastedConn?.fromElementId).not.toBe('el-1');
+			expect(pastedConn?.toElementId).not.toBe('el-2');
+			// Pasted connection endpoints should exist in elements
+			expect(state.elements[pastedConn?.fromElementId ?? '']).toBeDefined();
+			expect(state.elements[pastedConn?.toElementId ?? '']).toBeDefined();
+		});
+	});
+
+	describe('cut', () => {
+		it('cutSelected copies then deletes elements', () => {
+			useSceneStore.getState().addElement(makeElement('el-1'));
+			useSceneStore.getState().selectElement('el-1');
+			useSceneStore.getState().cutSelected();
+
+			const state = useSceneStore.getState();
+			expect(state.clipboard).toHaveLength(1);
+			expect(state.clipboard[0]?.id).toBe('el-1');
+			expect(state.elements['el-1']).toBeUndefined();
+			expect(state.elementIds).toHaveLength(0);
+		});
+
+		it('cutSelected also copies connections between selected elements', () => {
+			useSceneStore.getState().addElement(makeElement('el-1'));
+			useSceneStore.getState().addElement(makeElement('el-2'));
+			useSceneStore.getState().addConnection(makeConnection('conn-1', 'el-1', 'el-2'));
+			useSceneStore.getState().selectMultiple(['el-1', 'el-2']);
+			useSceneStore.getState().cutSelected();
+
+			const state = useSceneStore.getState();
+			expect(state.clipboard).toHaveLength(2);
+			expect(state.clipboardConnections).toHaveLength(1);
+			expect(state.elements['el-1']).toBeUndefined();
+			expect(state.elements['el-2']).toBeUndefined();
+			expect(state.connectionIds).toHaveLength(0);
+		});
+
+		it('cut then paste restores elements at offset', () => {
+			useSceneStore.getState().addElement(makeElement('el-1', { position: { x: 50, y: 50 } }));
+			useSceneStore.getState().selectElement('el-1');
+			useSceneStore.getState().cutSelected();
+
+			const pasted = useSceneStore.getState().paste(10, 10);
+			expect(pasted).toHaveLength(1);
+			expect(pasted[0]?.position).toEqual({ x: 60, y: 60 });
+			expect(useSceneStore.getState().elementIds).toHaveLength(1);
+		});
 	});
 
 	describe('camera', () => {

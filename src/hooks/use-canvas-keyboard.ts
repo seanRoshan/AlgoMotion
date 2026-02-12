@@ -16,6 +16,9 @@ export type OnSelectionChange = () => void;
  * Shortcuts:
  *   Ctrl/Cmd+Z        — undo
  *   Ctrl/Cmd+Shift+Z  — redo
+ *   Ctrl/Cmd+C        — copy selected
+ *   Ctrl/Cmd+V        — paste clipboard
+ *   Ctrl/Cmd+X        — cut selected
  *   Delete/Backspace  — delete selected elements
  *   Ctrl/Cmd+A        — select all
  *   Ctrl/Cmd+D        — duplicate selected
@@ -69,6 +72,35 @@ export function useCanvasKeyboard(
 					if (isMod) {
 						e.preventDefault();
 						store.selectAll();
+						onSelectionChange?.();
+					}
+					break;
+				}
+
+				case 'c':
+				case 'C': {
+					if (isMod) {
+						e.preventDefault();
+						store.copySelected();
+					}
+					break;
+				}
+
+				case 'v':
+				case 'V': {
+					if (isMod) {
+						e.preventDefault();
+						store.paste();
+						onSelectionChange?.();
+					}
+					break;
+				}
+
+				case 'x':
+				case 'X': {
+					if (isMod) {
+						e.preventDefault();
+						store.cutSelected();
 						onSelectionChange?.();
 					}
 					break;

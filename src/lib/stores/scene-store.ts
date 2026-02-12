@@ -25,6 +25,7 @@ export interface SceneState {
 	connectionIds: string[];
 	selectedIds: string[];
 	clipboard: SceneElement[];
+	clipboardConnections: Connection[];
 	camera: CameraState;
 }
 
@@ -40,6 +41,7 @@ export interface SceneActions {
 	selectMultiple: (ids: string[]) => void;
 	toggleSelection: (id: string) => void;
 	copySelected: () => void;
+	cutSelected: () => void;
 	paste: (offsetX?: number, offsetY?: number) => SceneElement[];
 	setCamera: (camera: Partial<CameraState>) => void;
 	selectAll: () => void;
@@ -61,6 +63,7 @@ const initialState: SceneState = {
 	connectionIds: [],
 	selectedIds: [],
 	clipboard: [],
+	clipboardConnections: [],
 	camera: { x: 0, y: 0, zoom: 1 },
 };
 
@@ -72,6 +75,7 @@ function extractState(store: SceneState): SceneState {
 		connectionIds: store.connectionIds,
 		selectedIds: store.selectedIds,
 		clipboard: store.clipboard,
+		clipboardConnections: store.clipboardConnections,
 		camera: store.camera,
 	};
 }
@@ -144,14 +148,16 @@ export const useSceneStore = create<SceneStore>()(
 						}, 'Remove connection'),
 
 					paste: (offsetX = 20, offsetY = 20) => {
-						const { clipboard } = get();
+						const { clipboard, clipboardConnections } = get();
 						const pasted: SceneElement[] = [];
 						const baseTimestamp = Date.now();
+						const idMap: Record<string, string> = {};
 						undoableSet((draft) => {
 							for (let i = 0; i < clipboard.length; i++) {
 								const el = clipboard[i];
 								if (!el) continue;
 								const newId = `${el.id}-copy-${baseTimestamp}-${i}`;
+								idMap[el.id] = newId;
 								const newEl: SceneElement = {
 									...el,
 									id: newId,
@@ -164,6 +170,25 @@ export const useSceneStore = create<SceneStore>()(
 								draft.elementIds.push(newId);
 								pasted.push(newEl);
 							}
+							// Paste connections with remapped IDs
+							for (let i = 0; i < clipboardConnections.length; i++) {
+								const conn = clipboardConnections[i];
+								if (!conn) continue;
+								const newFrom = idMap[conn.fromElementId];
+								const newTo = idMap[conn.toElementId];
+								if (!newFrom || !newTo) continue;
+								const newConnId = `${conn.id}-copy-${baseTimestamp}-${i}`;
+								const newConn: Connection = {
+									...conn,
+									id: newConnId,
+									fromElementId: newFrom,
+									toElementId: newTo,
+								};
+								draft.connections[newConnId] = newConn;
+								draft.connectionIds.push(newConnId);
+							}
+							// Auto-select pasted elements
+							draft.selectedIds = Object.values(idMap);
 						}, 'Paste elements');
 						return pasted;
 					},
@@ -281,11 +306,25 @@ export const useSceneStore = create<SceneStore>()(
 
 					copySelected: () =>
 						set((state) => {
-							const { elements, selectedIds } = state;
+							const { elements, selectedIds, connections, connectionIds } = state;
+							const selectedSet = new Set(selectedIds);
 							state.clipboard = selectedIds
 								.map((id) => elements[id])
 								.filter((el): el is SceneElement => el !== undefined);
+							state.clipboardConnections = connectionIds
+								.map((id) => connections[id])
+								.filter(
+									(conn): conn is Connection =>
+										conn !== undefined &&
+										selectedSet.has(conn.fromElementId) &&
+										selectedSet.has(conn.toElementId),
+								);
 						}),
+
+					cutSelected: () => {
+						get().copySelected();
+						get().deleteSelected();
+					},
 
 					setCamera: (camera) =>
 						set((state) => {
