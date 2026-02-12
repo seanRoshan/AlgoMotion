@@ -1,6 +1,7 @@
-import type { Application, Container } from 'pixi.js';
-import type { CameraState } from '@/types';
+import type { Application, Container, ContainerChild } from 'pixi.js';
+import type { CameraState, SceneElement } from '@/types';
 import { GridRenderer } from './grid-renderer';
+import { ElementRenderer } from './renderers/element-renderer';
 
 export type BackgroundMode = 'dots' | 'lines' | 'none';
 
@@ -31,6 +32,7 @@ export class SceneManager {
 	private gridLayer: Container | null = null;
 	private selectionLayer: Container | null = null;
 	private gridRenderer: GridRenderer | null = null;
+	private elementRenderer: ElementRenderer | null = null;
 	private resizeObserver: ResizeObserver | null = null;
 
 	private _camera: CameraState = { x: 0, y: 0, zoom: 1 };
@@ -66,7 +68,7 @@ export class SceneManager {
 	 * Uses dynamic import to avoid SSR issues.
 	 */
 	async init(options: SceneManagerOptions): Promise<void> {
-		const { Application, Container, Graphics } = await import('pixi.js');
+		const { Application, Container, Graphics, Text, TextStyle } = await import('pixi.js');
 
 		this.container = options.container;
 		this._backgroundMode = options.backgroundMode ?? 'dots';
@@ -107,6 +109,16 @@ export class SceneManager {
 		// Initialize grid renderer with a Graphics object
 		this.gridRenderer = new GridRenderer();
 		this.gridRenderer.setGraphics(new Graphics());
+
+		// Initialize element renderer with Pixi.js classes (dependency injection).
+		// ElementRenderer uses minimal interfaces for testability; real Pixi.js
+		// classes satisfy these contracts at runtime.
+		this.elementRenderer = new ElementRenderer({
+			Container,
+			Graphics,
+			Text,
+			TextStyle,
+		} as unknown as ConstructorParameters<typeof ElementRenderer>[0]);
 
 		// Apply initial camera
 		this.applyCamera();
@@ -167,6 +179,67 @@ export class SceneManager {
 		this.renderGrid();
 	}
 
+	// ── Element Management ──
+
+	/**
+	 * Add a scene element to the world container.
+	 */
+	addElement(element: SceneElement): void {
+		if (!this.elementRenderer || !this.worldContainer) return;
+		const displayObject = this.elementRenderer.createElement(element);
+		this.worldContainer.addChild(displayObject as unknown as ContainerChild);
+	}
+
+	/**
+	 * Update an existing scene element's display object.
+	 */
+	updateElement(element: SceneElement): void {
+		if (!this.elementRenderer) return;
+		this.elementRenderer.updateElement(element);
+	}
+
+	/**
+	 * Remove a scene element from the world container.
+	 */
+	removeElement(id: string): void {
+		if (!this.elementRenderer || !this.worldContainer) return;
+		const displayObject = this.elementRenderer.getDisplayObject(id);
+		if (displayObject) {
+			this.worldContainer.removeChild(displayObject as unknown as ContainerChild);
+		}
+		this.elementRenderer.destroyElement(id);
+	}
+
+	/**
+	 * Sync all elements from Zustand store to Pixi.js scene graph.
+	 * Performs a diff: adds new, updates existing, removes stale.
+	 */
+	syncElements(elements: Record<string, SceneElement>, elementIds: string[]): void {
+		if (!this.elementRenderer || !this.worldContainer) return;
+
+		const currentIds = new Set(elementIds);
+
+		// Remove elements no longer in the store
+		for (const id of this.elementRenderer.getTrackedIds()) {
+			if (!currentIds.has(id)) {
+				this.removeElement(id);
+			}
+		}
+
+		// Add or update elements
+		for (const id of elementIds) {
+			const element = elements[id];
+			if (!element) continue;
+
+			if (this.elementRenderer.getDisplayObject(id)) {
+				this.elementRenderer.updateElement(element);
+			} else {
+				const displayObject = this.elementRenderer.createElement(element);
+				this.worldContainer.addChild(displayObject as unknown as ContainerChild);
+			}
+		}
+	}
+
 	/**
 	 * Convert screen coordinates to world coordinates.
 	 */
@@ -208,6 +281,9 @@ export class SceneManager {
 	destroy(): void {
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
+
+		this.elementRenderer?.destroyAll();
+		this.elementRenderer = null;
 
 		if (this.app) {
 			this.removeInputHandlers();
