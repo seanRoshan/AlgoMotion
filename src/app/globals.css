@@ -143,3 +143,28 @@
 			color 150ms ease;
 	}
 }
+
+/* Monaco Editor — breakpoint glyph (red dot in gutter) */
+.breakpoint-glyph {
+	background: #ef4444;
+	border-radius: 50%;
+	width: 10px !important;
+	height: 10px !important;
+	margin-left: 4px;
+	margin-top: 5px;
+}
+
+/* Monaco Editor — current execution line highlight */
+.current-line-highlight {
+	background: rgba(59, 130, 246, 0.15);
+	border-left: 2px solid #3b82f6;
+}
+
+.current-line-glyph {
+	background: #3b82f6;
+	clip-path: polygon(0% 20%, 100% 50%, 0% 80%);
+	width: 8px !important;
+	height: 14px !important;
+	margin-left: 4px;
+	margin-top: 3px;
+}
