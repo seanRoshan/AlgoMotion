@@ -1,5 +1,7 @@
 export type { GridRenderOptions } from './grid-renderer';
 export { GridRenderer } from './grid-renderer';
+export type { MinimapInteractionDeps, MinimapRenderOptions } from './minimap';
+export { MinimapInteractionHandler, MinimapRenderer } from './minimap';
 export { ElementRenderer } from './renderers/element-renderer';
 export {
 	ARROW_DEFAULTS,

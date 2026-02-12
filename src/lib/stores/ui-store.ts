@@ -40,6 +40,7 @@ export interface UIState {
 	snapToGrid: boolean;
 	theme: ThemePreference;
 	commandPaletteOpen: boolean;
+	minimapVisible: boolean;
 }
 
 export interface UIActions {
@@ -55,6 +56,8 @@ export interface UIActions {
 	setTheme: (theme: ThemePreference) => void;
 	setCommandPaletteOpen: (open: boolean) => void;
 	toggleCommandPalette: () => void;
+	toggleMinimap: () => void;
+	setMinimapVisible: (visible: boolean) => void;
 	reset: () => void;
 }
 
@@ -71,6 +74,7 @@ const initialState: UIState = {
 	snapToGrid: true,
 	theme: 'dark',
 	commandPaletteOpen: false,
+	minimapVisible: true,
 };
 
 export const useUIStore = create<UIStore>()(
@@ -139,6 +143,16 @@ export const useUIStore = create<UIStore>()(
 						state.commandPaletteOpen = !state.commandPaletteOpen;
 					}),
 
+				toggleMinimap: () =>
+					set((state) => {
+						state.minimapVisible = !state.minimapVisible;
+					}),
+
+				setMinimapVisible: (visible) =>
+					set((state) => {
+						state.minimapVisible = visible;
+					}),
+
 				reset: () => set(initialState),
 			})),
 			{
@@ -153,6 +167,7 @@ export const useUIStore = create<UIStore>()(
 					gridVisible: state.gridVisible,
 					snapToGrid: state.snapToGrid,
 					theme: state.theme,
+					minimapVisible: state.minimapVisible,
 				}),
 			},
 		),
