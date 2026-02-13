@@ -22,7 +22,7 @@ test.describe('Templates', () => {
 
 	test('editor has Templates tab in left panel', async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 
 		const templatesTab = page.getByRole('tab', { name: 'Templates' });
 		await expect(templatesTab).toBeVisible();
@@ -30,7 +30,7 @@ test.describe('Templates', () => {
 
 	test('clicking Templates tab shows template gallery', async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 
 		await page.getByRole('tab', { name: 'Templates' }).click();
 		await expect(page.getByRole('tab', { name: 'Templates' })).toHaveAttribute(
@@ -41,7 +41,7 @@ test.describe('Templates', () => {
 
 	test('template gallery has search/filter capability', async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 
 		await page.getByRole('tab', { name: 'Templates' }).click();
 		// Template gallery should be rendered in the panel

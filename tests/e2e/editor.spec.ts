@@ -10,7 +10,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Editor', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 	});
 
 	test('loads with main toolbar', async ({ page }) => {

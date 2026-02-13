@@ -10,7 +10,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Playback Controls', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 	});
 
 	test('play button is clickable', async ({ page }) => {

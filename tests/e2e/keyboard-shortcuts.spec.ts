@@ -11,8 +11,9 @@ import { expect, test } from '@playwright/test';
 test.describe('Keyboard Shortcuts', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
-		// Wait for Pixi.js canvas to initialize, then click to ensure focus
+		// Use 'load' instead of 'networkidle' — the app may have persistent connections
+		await page.waitForLoadState('load');
+		// Wait for Pixi.js canvas to render and click to ensure keyboard focus
 		const canvas = page.locator('canvas').first();
 		await expect(canvas).toBeVisible({ timeout: 15_000 });
 		await canvas.click();

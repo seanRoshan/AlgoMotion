@@ -10,7 +10,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Menus', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 	});
 
 	test('File menu opens and shows items', async ({ page }) => {

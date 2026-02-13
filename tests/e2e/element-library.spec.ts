@@ -10,7 +10,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Element Library', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 	});
 
 	test('shows Elements tab by default', async ({ page }) => {

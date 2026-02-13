@@ -13,7 +13,7 @@ test.describe('Save and Load', () => {
 		page.on('pageerror', (err) => errors.push(err.message));
 
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 
 		// Wait for hydration and async Pixi.js init to complete
 		await expect(page.locator('canvas').first()).toBeVisible();
@@ -24,7 +24,7 @@ test.describe('Save and Load', () => {
 
 	test('Ctrl+S does not trigger browser save dialog', async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 
 		// Wait for Pixi.js canvas to initialize, then click to focus
 		const canvas = page.locator('canvas').first();
@@ -46,7 +46,7 @@ test.describe('Save and Load', () => {
 	test('editor state persists across page navigation', async ({ page }) => {
 		// Go to editor
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 
 		// Verify editor loaded
 		await expect(page.getByRole('toolbar', { name: 'Main toolbar' })).toBeVisible();
@@ -57,7 +57,7 @@ test.describe('Save and Load', () => {
 
 		// Go back to editor
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 
 		// Editor should still load correctly
 		await expect(page.getByRole('toolbar', { name: 'Main toolbar' })).toBeVisible();
@@ -65,12 +65,12 @@ test.describe('Save and Load', () => {
 
 	test('page refresh preserves editor structure', async ({ page }) => {
 		await page.goto('/editor/demo');
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 		await expect(page.getByRole('toolbar', { name: 'Main toolbar' })).toBeVisible();
 
 		// Reload
 		await page.reload();
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState('load');
 
 		// Editor should still render
 		await expect(page.getByRole('toolbar', { name: 'Main toolbar' })).toBeVisible();
