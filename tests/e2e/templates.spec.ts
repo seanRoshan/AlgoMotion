@@ -9,13 +9,15 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Templates', () => {
 	test('templates page shows heading', async ({ page }) => {
-		await page.goto('/templates');
+		await page.goto('/dashboard/templates');
 		await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible();
 	});
 
 	test('templates page shows description', async ({ page }) => {
-		await page.goto('/templates');
-		await expect(page.getByText('Start from a pre-built algorithm')).toBeVisible();
+		await page.goto('/dashboard/templates');
+		await expect(
+			page.getByText('Start from a pre-built algorithm or data structure template'),
+		).toBeVisible();
 	});
 
 	test('editor has Templates tab in left panel', async ({ page }) => {

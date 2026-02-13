@@ -45,7 +45,7 @@ test.describe('Visual Regression', () => {
 	});
 
 	test('templates page', async ({ page }) => {
-		await page.goto('/templates');
+		await page.goto('/dashboard/templates');
 		await page.waitForLoadState('networkidle');
 		await expect(page).toHaveScreenshot('templates-page.png');
 	});

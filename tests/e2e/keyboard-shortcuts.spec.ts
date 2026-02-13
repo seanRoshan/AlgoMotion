@@ -12,8 +12,10 @@ test.describe('Keyboard Shortcuts', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/editor/demo');
 		await page.waitForLoadState('networkidle');
-		// Click on the canvas area to ensure focus is not on a text input
-		await page.locator('canvas').first().click();
+		// Wait for Pixi.js canvas to initialize, then click to ensure focus
+		const canvas = page.locator('canvas').first();
+		await expect(canvas).toBeVisible({ timeout: 15_000 });
+		await canvas.click();
 	});
 
 	test('Space toggles play/pause', async ({ page }) => {

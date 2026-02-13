@@ -28,7 +28,7 @@ test.describe('Navigation', () => {
 	});
 
 	test('templates page renders', async ({ page }) => {
-		await page.goto('/templates');
+		await page.goto('/dashboard/templates');
 		await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible();
 	});
 

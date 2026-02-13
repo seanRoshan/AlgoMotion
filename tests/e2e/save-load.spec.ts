@@ -26,8 +26,10 @@ test.describe('Save and Load', () => {
 		await page.goto('/editor/demo');
 		await page.waitForLoadState('networkidle');
 
-		// Click canvas to ensure focus
-		await page.locator('canvas').first().click();
+		// Wait for Pixi.js canvas to initialize, then click to focus
+		const canvas = page.locator('canvas').first();
+		await expect(canvas).toBeVisible({ timeout: 15_000 });
+		await canvas.click();
 
 		// Ctrl+S should be intercepted by the app (no browser save dialog)
 		let dialogAppeared = false;
