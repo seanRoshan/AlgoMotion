@@ -11,12 +11,11 @@ import { expect, test } from '@playwright/test';
 test.describe('Keyboard Shortcuts', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/editor/demo');
-		// Use 'load' instead of 'networkidle' — the app may have persistent connections
 		await page.waitForLoadState('load');
-		// Wait for Pixi.js canvas to render and click to ensure keyboard focus
-		const canvas = page.locator('canvas').first();
-		await expect(canvas).toBeVisible({ timeout: 15_000 });
-		await canvas.click();
+		// Wait for toolbar to appear (signals editor is ready)
+		await expect(page.getByRole('toolbar', { name: 'Main toolbar' })).toBeVisible();
+		// Click the main content area to ensure keyboard focus (canvas may not be clickable during Pixi init)
+		await page.locator('main#main-content').click({ force: true });
 	});
 
 	test('Space toggles play/pause', async ({ page }) => {
