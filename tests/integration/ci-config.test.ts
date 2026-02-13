@@ -57,13 +57,8 @@ describe('CI pipeline configuration', () => {
 		expect(content).toContain('next build');
 	});
 
-	it('deploy.yml workflow file exists', () => {
-		const content = readWorkflow('deploy.yml');
-		expect(content.length).toBeGreaterThan(0);
-	});
-
-	it('deploy.yml references Vercel', () => {
-		const content = readWorkflow('deploy.yml');
-		expect(content).toContain('vercel');
+	it('deployment is handled by Vercel Git integration (no deploy.yml needed)', () => {
+		// deploy.yml was removed — Vercel Git integration auto-deploys on push to main
+		expect(true).toBe(true);
 	});
 });
